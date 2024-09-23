@@ -3,10 +3,12 @@
 #include <xtensor/xio.hpp> 
 #include <xtensor/xview.hpp>
 #include <xtensor/xrandom.hpp>
+#include <xtensor-blas/xlinalg.hpp>
 using namespace xt::placeholders;  // to enable _ syntax
 using namespace std;
 using namespace xt;
 #include "utils.cpp"
+#include "backpropagation.cpp"
 
 
 int main()
@@ -43,6 +45,35 @@ int main()
 
     gnu_plot(x_train);
 
+    std::tuple weights_biases = make_gradient_descent(x_train, y_train, 10, 0.1);
+
+    auto [w1, w2, w3, b1, b2, b3] = weights_biases;
+
+    // Predict probas
+    xarray<double> y_test_pred = zeros<double>({1, 1});
+    for (int i = 0; i < y_test.size(); i++) {
+
+        // Input layer
+        xarray<double> a0 = xt::view(x_test, i, xt::all());
+        a0 = a0.reshape({1, 2});
+
+        // First hidden layer
+        auto z1 = xt::linalg::dot(w1, a0);
+        auto a1 = sigma(z1);
+
+        // Second hidden layer
+        auto z2 = xt::linalg::dot(w2, a1) + b2;
+        auto a2 = sigma(z2);
+
+        // Third hidden layer
+        auto z3 = xt::linalg::dot(w3, a2) + b3;
+        auto a3 = sigma(z3); // prediction, shape (1, 1)
+
+        // Append to the prediction vector
+        y_test_pred = concatenate(xt::xtuple(y_test_pred, a3), 0);
+    }
+
+    cout << y_test_pred;
 
     return 0;
 }

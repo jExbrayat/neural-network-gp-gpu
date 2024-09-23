@@ -3,7 +3,9 @@
 #include <xtensor/xio.hpp>
 #include <xtensor/xview.hpp>
 #include <xtensor/xrandom.hpp>
+#include <xtensor-blas/xlinalg.hpp>
 #include <tuple>
+#include "utils.cpp"
 using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
 using namespace xt;
@@ -22,6 +24,10 @@ make_gradient_descent(
     int epochs,
     float learning_rate
 ) {
+
+    // Define constants
+    int dataset_size = x_train.shape()[0]; 
+
 
     // Initialize network
 

@@ -13,7 +13,7 @@ xt::xarray<double> create_random_dataset(float mean, float std, int n_observatio
     std::random_device rd;
     std::mt19937 e2(rd());
 
-    std::normal_distribution<> dist(0, 1);
+    std::normal_distribution<> dist(mean, variance);
 
     // Init data array
     xt::xarray<double> dataset = xt::zeros<double>({0, 2}) ; 
@@ -55,11 +55,11 @@ int main()
 {
 
     // Create two random datasets with different caracteristics
-    auto x1 = create_random_dataset(0, 1, 500);
+    auto x1 = create_random_dataset(0, 1.4, 500);
     xt::xarray<int> y1 = xt::ones<int>({500, 1});
     xt::xarray<double> dataset1 = xt::concatenate(xt::xtuple(x1, y1), 1);
 
-    auto x2 = create_random_dataset(0.5, 0.8, 500);
+    auto x2 = create_random_dataset(5, 0.8, 500);
     xt::xarray<int> y2 = xt::zeros<int>({500, 1});
     xt::xarray<double> dataset2 = xt::concatenate(xt::xtuple(x2, y2), 1);
 

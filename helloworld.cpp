@@ -69,8 +69,12 @@ int main() {
 
   xarray<double> a = xarray<double>({1, 2});
   xarray<double> b = xarray<double>({7, 3});
+  array d = {1, 2, 9};
   auto c = a * b;
-  cout << c(0) << " " << c(1);
+  cout << c;
+
+  std::tuple my_tuple = std::tuple<int, int, xarray<double>>{1, 2, a};
+  cout << "The tuple elements " << get<0>(my_tuple) << endl << get<2>(my_tuple); 
 
 
   return 0;

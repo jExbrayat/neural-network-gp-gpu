@@ -1,10 +1,8 @@
 #include <iostream>
-#include <random>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xio.hpp> 
 #include <xtensor/xview.hpp>
 #include <xtensor/xrandom.hpp>
-#include <fstream>
 using namespace xt::placeholders;  // to enable _ syntax
 using namespace std;
 using namespace xt;

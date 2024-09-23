@@ -83,8 +83,15 @@ int main()
         }
     }
 
-    cout << y_test_pred;
-    cout << y_test_proba;
+    // Compute vector taking 1 if prediction is correct
+    xarray<int> true_pred = zeros<int>({y_test.size()}); 
+    for (size_t i = 0; i < y_test.size(); i++) {
+        true_pred(i) = (y_test(i) == y_test_pred(i)) ? 1 : 0; // Assign 1 or 0 based on the condition
+    } 
+
+    cout << "\nPrecision:\n";
+    double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.size();
+    cout << precision << endl;
 
     return 0;
 }

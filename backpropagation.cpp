@@ -68,7 +68,7 @@ make_gradient_descent(
 
             // Third hidden layer
             auto z3 = xt::linalg::dot(w3, a2) + b3;
-            auto a3 = sigma(z3); // prediction
+            auto a3 = sigma(z3); // prediction, shape (1, 1)
 
             // Compute MSE
             mse += std::pow(a3(1, 1) - y_train(1, i), 2);

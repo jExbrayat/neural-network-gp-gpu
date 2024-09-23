@@ -35,7 +35,7 @@ make_gradient_descent(
     xarray<double> w2 = xt::random::randn<double>({5, 3});
     xarray<double> w3 = xt::random::randn<double>({1, 5});
 
-    // Biasses
+    // Biases
     xarray<double> b1 = xt::random::randn<double>({3, 1});
     xarray<double> b2 = xt::random::randn<double>({5, 1});
     xarray<double> b3 = xt::random::randn<double>({1, 1});

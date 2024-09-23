@@ -1,3 +1,10 @@
 cmake*
+
 .venv
 .vscode
+
+temp
+!temp/__init__
+
+build
+!build/__init__

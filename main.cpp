@@ -43,7 +43,7 @@ int main()
         << std::endl;
     }
 
-    gnu_plot(x_train);
+    // gnu_plot(x_train);
 
     std::tuple weights_biases = make_gradient_descent(x_train, y_train, 10, 0.1);
 
@@ -55,7 +55,7 @@ int main()
 
         // Input layer
         xarray<double> a0 = xt::view(x_test, i, xt::all());
-        a0 = a0.reshape({1, 2});
+        a0 = a0.reshape({2, 1});
 
         // First hidden layer
         auto z1 = xt::linalg::dot(w1, a0);

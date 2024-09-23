@@ -1,7 +1,11 @@
 #include <iostream>
 #include <cmath>
+#include <xtensor/xio.hpp>
 using namespace std;
+using namespace xt;
 #include <iomanip>  // For std::setprecision, std::setw, etc.
+#include <xtensor-blas/xlinalg.hpp>
+#include <xtensor/xarray.hpp>
 
 int main() {
   cout << "Outputs begin here\n";
@@ -62,6 +66,12 @@ int main() {
   clean_struct.evil = 555;
 
   cout << clean_struct.evil << endl;
+
+  xarray<double> a = xarray<double>({1, 2});
+  xarray<double> b = xarray<double>({7, 3});
+  auto c = a * b;
+  cout << c(0) << " " << c(1);
+
 
   return 0;
 }

@@ -17,18 +17,16 @@ std::tuple<
     xt::xarray<double>,
     xt::xarray<double>,
     xt::xarray<double>,
-    xt::xarray<double>
->
+    xt::xarray<double>>
 make_gradient_descent(
     xarray<double> x_train,
     xarray<double> y_train, // shape must be (1, n)
     int epochs,
-    float learning_rate
-) {
+    float learning_rate)
+{
 
     // Define constants
     int dataset_size = x_train.shape()[0]; 
-
 
     // Initialize network
 

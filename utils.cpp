@@ -68,3 +68,11 @@ void shuffleArray(xt::xarray<double>& array) {
     // Copy the shuffled rows back to the original array
     array = temp;
 }
+
+xarray<double> sigma(xarray<double> x) {
+    return 1 / (1 + xt::exp(-x));
+}
+
+xarray<double> sigma_derivative(xarray<double> x) {
+    return sigma(x) * (1 - sigma(x));
+}

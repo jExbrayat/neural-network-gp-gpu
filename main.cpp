@@ -7,7 +7,7 @@
 using namespace xt::placeholders;  // to enable _ syntax
 using namespace std;
 using namespace xt;
-#include "utils.cpp"
+#include "definition.hpp"
 #include "backpropagation.cpp"
 
 

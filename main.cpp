@@ -50,7 +50,7 @@ int main()
     auto [w1, w2, w3, b1, b2, b3] = weights_biases;
 
     // Predict probas
-    xarray<double> y_test_pred = zeros<double>({1, 1});
+    xarray<double> y_test_proba = zeros<double>({0, 1});
     for (int i = 0; i < y_test.size(); i++) {
 
         // Input layer
@@ -70,10 +70,21 @@ int main()
         auto a3 = sigma(z3); // prediction, shape (1, 1)
 
         // Append to the prediction vector
-        y_test_pred = concatenate(xt::xtuple(y_test_pred, a3), 0);
+        y_test_proba = concatenate(xt::xtuple(y_test_proba, a3), 0);
+    }
+
+    // Convert proba to class prediction
+    xt::xarray<int> y_test_pred = xt::empty<int>(y_test_proba.shape()); 
+    for (int i = 0; i < y_test_proba.shape(0); i++) {
+        if (y_test_proba(i, 0) <= 0.5) {
+            y_test_pred(i, 0) = 0;
+        } else {
+            y_test_pred(i, 0) = 1;
+        }
     }
 
     cout << y_test_pred;
+    cout << y_test_proba;
 
     return 0;
 }

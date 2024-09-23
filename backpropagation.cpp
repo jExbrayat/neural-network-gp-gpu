@@ -40,11 +40,6 @@ make_gradient_descent(
     xarray<double> b2 = xt::random::randn<double>({5, 1});
     xarray<double> b3 = xt::random::randn<double>({1, 1});
 
-    // Define gradient matrices
-    xarray<double> nabla_w1 = zeros<double>(w1.shape());
-    xarray<double> nabla_w2 = zeros<double>(w2.shape());
-    xarray<double> nabla_w3 = zeros<double>(w3.shape());
-
     // Init predicted values array
     xarray<double> y_pred = zeros<double>({1, dataset_size});
 
@@ -56,7 +51,7 @@ make_gradient_descent(
 
             // Input layer
             xarray<double> a0 = xt::view(x_train, i, xt::all());
-            a0 = a0.reshape({1, 2});
+            a0 = a0.reshape({2, 1});
 
             // First hidden layer
             auto z1 = xt::linalg::dot(w1, a0);

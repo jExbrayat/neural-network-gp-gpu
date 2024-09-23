@@ -4,11 +4,29 @@
 #include <xtensor/xio.hpp> 
 #include <xtensor/xview.hpp>
 #include <xtensor/xrandom.hpp>
+#include <fstream>
 using namespace xt::placeholders;  // to enable _ syntax
 using namespace std;
+using namespace xt;
 
+void gnu_plot(xarray<double> two_dimensional_dataset) {
+    
+    // Retrieve dataset size
+    int n_rows = two_dimensional_dataset.shape()[0];
 
-xt::xarray<double> create_random_dataset(float mean, float std, int n_observations) { 
+    // Create a data file
+    std::ofstream data("temp/gnu.dat");
+
+    for (int i = 0; i < n_rows; i++) {
+        data << two_dimensional_dataset(i, 0) << " " << two_dimensional_dataset(i, 1) << endl; // x and y values
+    }
+    data.close();
+
+    // Use Gnuplot to plot the data
+    system("gnuplot -p -e \"set terminal x11; plot 'temp/gnu.dat' using 1:2 with points\"");
+}
+
+xt::xarray<double> create_random_dataset(float mean, float variance, int n_observations) { 
     // Define seed
     std::random_device rd;
     std::mt19937 e2(rd());

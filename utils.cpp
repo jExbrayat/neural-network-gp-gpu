@@ -9,7 +9,7 @@ using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
 using namespace xt;
 
-void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred)
+void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred) // true_pred shape: (n, 1)
 {
 
     // Define paths

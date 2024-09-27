@@ -20,7 +20,7 @@ std::tuple<
     xt::xarray<double>>
 make_gradient_descent(
     xarray<double> x_train,
-    xarray<double> y_train, // shape must be (1, n)
+    xarray<double> y_train, // shape must be (n, 1)
     int epochs,
     float learning_rate)
 {
@@ -39,9 +39,6 @@ make_gradient_descent(
     xarray<double> b1 = xt::random::randn<double>({3, 1});
     xarray<double> b2 = xt::random::randn<double>({5, 1});
     xarray<double> b3 = xt::random::randn<double>({1, 1});
-
-    // Init predicted values array
-    xarray<double> y_pred = zeros<double>({1, dataset_size});
 
     for (int epoch = 0; epoch < epochs; epoch++)
     {
@@ -66,11 +63,11 @@ make_gradient_descent(
             auto a3 = sigma(z3); // prediction, shape (1, 1)
 
             // Compute MSE
-            mse += std::pow(a3(1, 1) - y_train(1, i), 2);
+            mse += std::pow(a3(1, 1) - y_train(i, 1), 2);
 
             // Make backpropagation
 
-            xarray<double> delta3 = (a3 - y_train(1, i)) * sigma_derivative(z3);
+            xarray<double> delta3 = (a3 - y_train(i, 1)) * sigma_derivative(z3);
             xarray<double> delta2 = linalg::dot(transpose(w3), delta3) * sigma_derivative(z2);
             xarray<double> delta1 = linalg::dot(transpose(w2), delta2) * sigma_derivative(z1);
 

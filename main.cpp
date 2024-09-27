@@ -93,5 +93,9 @@ int main()
     double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.size();
     cout << precision << endl;
 
+    cout << xt::view(true_pred, xt::range(_, 50));
+
+    gnuplot(x_test, true_pred);
+
     return 0;
 }

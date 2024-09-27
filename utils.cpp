@@ -12,11 +12,15 @@ using namespace xt;
 void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred)
 {
 
+    // Define paths
+    string gnuplot_commands_path = "temp/gnuplot_commands.gp";
+    string data_path = "temp/gnuplot.dat";
+
     // Retrieve dataset size
     int n_rows = two_dimensional_dataset.shape()[0];
 
     // Create a data file
-    std::ofstream data("temp/gnuplot.dat");
+    std::ofstream data(data_path);
     for (int i = 0; i < n_rows; i++)
     {
         data
@@ -28,7 +32,7 @@ void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred)
     data.close();
 
     // Use Gnuplot to plot the data
-    std::ofstream gnuplot_commands("temp/gnuplot_commands.gp");
+    std::ofstream gnuplot_commands(gnuplot_commands_path);
     gnuplot_commands << "set terminal wxt size 1200,800\n";         // Set window size
     gnuplot_commands << "set xlabel 'x1'\n";                        // Set x-axis label
     gnuplot_commands << "set ylabel 'x2'\n";                        // Set y-axis label
@@ -41,7 +45,7 @@ void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred)
     gnuplot_commands.close();
 
     // Run gnuplot with the command file
-    std::system("unset GTK_PATH && gnuplot-x11 -persist temp/gnuplot_commands.gp");
+    std::system(("unset GTK_PATH && gnuplot-x11 -persist " + gnuplot_commands_path).c_str());
 }
 
     xt::xarray<double> create_random_dataset(float mean, float variance, int n_observations)

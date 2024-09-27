@@ -4,39 +4,56 @@
 #include <xtensor/xview.hpp>
 #include <xtensor/xrandom.hpp>
 #include <xtensor-blas/xlinalg.hpp>
+#include <xtensor/xcsv.hpp>
 using namespace xt::placeholders;  // to enable _ syntax
 using namespace std;
 using namespace xt;
 #include "definition.hpp"
 #include "backpropagation.cpp"
 
+void print_help(const std::string& program_name) {
+    std::cout << "Usage: " << program_name << " [options] <input_file.csv>\n"
+            << "Options:\n"
+            << "  --help                 Show this help message and exit\n"
+            << "  <input_file.csv>       Path to the input CSV file containing data\n\n"
+            << "Example:\n"
+            << "  " << program_name << " input_data.csv\n";
+}
 
-int main()
+int main(int argc, char* argv[])
 {
+    // Check if the --help argument is passed
+    if (argc > 1 && std::string(argv[1]) == "--help") {
+        print_help(argv[0]);
+        return 0;
+    }
 
-    // Create two random datasets with different caracteristics
-    auto x1 = create_random_dataset(0, 1.4, 500); // shape (n, 2)
-    xt::xarray<int> y1 = xt::ones<int>({500, 1}); // shape (n, 1)
-    xt::xarray<double> dataset1 = xt::concatenate(xt::xtuple(x1, y1), 1); // shape (n, 3)
+    // Open the file passed as argument
+    std::string file_name = argv[1];
+    std::ifstream file(file_name);
 
-    auto x2 = create_random_dataset(5, 0.8, 500);
-    xt::xarray<int> y2 = xt::zeros<int>({500, 1});
-    xt::xarray<double> dataset2 = xt::concatenate(xt::xtuple(x2, y2), 1);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << file_name << std::endl;
+        return 1;
+    }
 
-    // Concatenate the two datasets and shuffle them
-    xt::xarray<double> dataset = xt::concatenate(xtuple(dataset1, dataset2), 0);
-
+    // Use xtensor-io to load the CSV data into an xtensor xarray
+    xt::xarray<double> dataset = load_csv<double>(file, ',');
+    
     // Shuffle
     shuffleArray(dataset); 
 
-    // Split into train and test sets
-    xt::xarray<double> x_train = xt::view(dataset, xt::range(_, 800), xt::range(0, 2));
-    xt::xarray<double> y_train = xt::view(dataset, xt::range(_, 800), xt::range(2, 3));
-    
-    xt::xarray<double> x_test = xt::view(dataset, xt::range(800, _), xt::range(0, 2));
-    xt::xarray<double> y_test = xt::view(dataset, xt::range(800, _), xt::range(2, 3)); // shape (n, 1)
 
-    std::tuple weights_biases = make_gradient_descent(x_train, y_train, 10, 0.1);
+    // Split into train and test sets
+    int train_size = abs(0.8 * dataset.shape(0));
+    
+    xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::range(0, 2));
+    xt::xarray<double> y_train = xt::view(dataset, xt::range(_, train_size), xt::range(2, 3));
+    
+    xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, 2));
+    xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(2, 3)); // shape (n, 1)
+
+    std::tuple weights_biases = make_gradient_descent(x_train, y_train, 100, 0.1);
 
     auto [w1, w2, w3, b1, b2, b3] = weights_biases;
 

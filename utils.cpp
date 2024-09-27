@@ -9,7 +9,7 @@ using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
 using namespace xt;
 
-void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred) // true_pred shape: (n, 1)
+void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred, string plot_title) // true_pred shape: (n, 1)
 {
 
     // Define paths
@@ -36,7 +36,7 @@ void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred) // t
     gnuplot_commands << "set terminal wxt size 1200,800\n";         // Set window size
     gnuplot_commands << "set xlabel 'x1'\n";                        // Set x-axis label
     gnuplot_commands << "set ylabel 'x2'\n";                        // Set y-axis label
-    gnuplot_commands << "set title 'x1 vs x2 Colored by Cluster y'\n"; // Set plot title
+    gnuplot_commands << "set title '" + plot_title + "'\n"; // Set plot title
     gnuplot_commands << "set pointsize 0.5\n";                        // Set point size
     gnuplot_commands << "set palette defined (0 'blue', 1 'red')\n"; // Define color palette for clusters
     gnuplot_commands << "plot 'temp/gnuplot.dat' u 1:2:3 with points palette pt 7\n"; // Plot data points using the third column for color

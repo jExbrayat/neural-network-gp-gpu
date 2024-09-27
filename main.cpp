@@ -84,8 +84,8 @@ int main()
     double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.size();
     cout << precision << endl;
 
-    gnuplot(x_test, y_test_pred);
-    gnuplot(x_test, true_pred);
+    gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
+    gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
 
     return 0;
 }

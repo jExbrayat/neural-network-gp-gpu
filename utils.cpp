@@ -37,7 +37,7 @@ void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred, stri
     gnuplot_commands << "set xlabel 'x1'\n";                        // Set x-axis label
     gnuplot_commands << "set ylabel 'x2'\n";                        // Set y-axis label
     gnuplot_commands << "set title '" + plot_title + "'\n"; // Set plot title
-    gnuplot_commands << "set pointsize 0.5\n";                        // Set point size
+    gnuplot_commands << "set pointsize 1.5\n";                        // Set point size
     gnuplot_commands << "set palette defined (0 'blue', 1 'red')\n"; // Define color palette for clusters
     gnuplot_commands << "plot 'temp/gnuplot.dat' u 1:2:3 with points palette pt 7\n"; // Plot data points using the third column for color
 

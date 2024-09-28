@@ -52,13 +52,13 @@ int main(int argc, char* argv[])
 
 
     // Split into train and test sets
-    int train_size = abs(0.8 * dataset.shape(0));
+    int train_size = abs(1.0 * dataset.shape(0));
 
     xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::range(0, 2));
     xt::xarray<double> y_train = xt::view(dataset, xt::range(_, train_size), xt::range(2, 3));
     
-    xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, 2));
-    xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(2, 3)); // shape (n, 1)
+    xt::xarray<double> x_test = x_train;
+    xt::xarray<double> y_test = y_train; // shape (n, 1)
 
     std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, lr);
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
         a0 = a0.reshape({2, 1});
 
         // First hidden layer
-        auto z1 = xt::linalg::dot(w1, a0);
+        auto z1 = xt::linalg::dot(w1, a0) + b1;
         auto a1 = sigma(z1);
 
         // Second hidden layer
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     // Compute vector taking 1 if prediction is correct
     xarray<int> true_pred = empty<int>(y_test.shape()); // shape (n, 1)
     for (int i = 0; i < y_test.size(); i++) {
-        true_pred(i, 1) = (y_test(i, 1) == y_test_pred(i, 1)) ? 1 : 0; // Assign 1 or 0 based on the condition
+        true_pred(i, 0) = (y_test(i, 0) == y_test_pred(i, 0)) ? 1 : 0; // Assign 1 or 0 based on the condition
     } 
 
     cout << "\nPrecision:\n";

@@ -41,8 +41,9 @@ make_gradient_descent(
     xarray<double> b2 = xt::random::randn<double>({5, 1});
     xarray<double> b3 = xt::random::randn<double>({1, 1});
 
-    xarray<double> mse_array = zeros<double>({0}); 
-
+    // Init mse array
+    xarray<double> mse_array = xt::empty<double>({0});
+    
     for (int epoch = 0; epoch < epochs; epoch++)
     {
         float mse = 0;
@@ -54,7 +55,7 @@ make_gradient_descent(
             a0 = a0.reshape({2, 1});
 
             // First hidden layer
-            auto z1 = xt::linalg::dot(w1, a0);
+            auto z1 = xt::linalg::dot(w1, a0) + b1;
             auto a1 = sigma(z1);
 
             // Second hidden layer
@@ -66,11 +67,11 @@ make_gradient_descent(
             auto a3 = sigma(z3); // prediction, shape (1, 1)
 
             // Compute MSE
-            mse += std::pow(a3(1, 1) - y_train(i, 1), 2) / dataset_size;
+            mse += std::pow(a3(0, 0) - y_train(i, 0), 2) / dataset_size;
 
             // Make backpropagation
 
-            xarray<double> delta3 = (a3 - y_train(i, 1)) * sigma_derivative(z3);
+            xarray<double> delta3 = (a3 - y_train(i, 0)) * sigma_derivative(z3);
             xarray<double> delta2 = linalg::dot(transpose(w3), delta3) * sigma_derivative(z2);
             xarray<double> delta1 = linalg::dot(transpose(w2), delta2) * sigma_derivative(z1);
 
@@ -78,28 +79,9 @@ make_gradient_descent(
             xarray<double> gradient_b2 = delta2;
             xarray<double> gradient_b3 = delta3;
 
-            xarray<double> gradient_w1 = zeros<double>(w1.shape());
-            xarray<double> gradient_w2 = zeros<double>(w2.shape());
-            xarray<double> gradient_w3 = zeros<double>(w3.shape());
-
-            for (int j = 0; j < w1.shape()[0]; j++) {
-                for (int k = 0; k < w1.shape()[1]; k++) {
-                    gradient_w1[j, k] = a0[k] * delta1[j];
-                }
-            }
-
-            for (int j = 0; j < w2.shape()[0]; j++) {
-                for (int k = 0; k < w2.shape()[1]; k++) {
-                    gradient_w2[j, k] = a1[k] * delta2[j];
-                }
-            }
-
-            for (int j = 0; j < w3.shape()[0]; j++) {
-                for (int k = 0; k < w3.shape()[1]; k++) {
-                    gradient_w3[j, k] = a2[k] * delta3[j];
-                }
-            }
-
+            auto gradient_w1 = xt::linalg::dot(delta1, xt::transpose(a0));
+            auto gradient_w2 = xt::linalg::dot(delta2, xt::transpose(a1));
+            auto gradient_w3 = xt::linalg::dot(delta3, xt::transpose(a2));
 
             // Updating biases and weights
             b1 -= learning_rate * gradient_b1;

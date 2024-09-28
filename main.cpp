@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 
     std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, lr);
 
-    auto [w1, w2, w3, b1, b2, b3] = weights_biases;
+    auto [w1, w2, w3, b1, b2, b3, mse_array] = weights_biases;
 
     // Predict probas
     xarray<double> y_test_proba = zeros<double>({0, 1});
@@ -110,6 +110,7 @@ int main(int argc, char* argv[])
 
     gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
     gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
+    gnuplot_loss_plot(mse_array, "Loss");
 
     return 0;
 }

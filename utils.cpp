@@ -102,31 +102,33 @@ void gnuplot_loss_plot(xt::xarray<double> loss_values, std::string plot_title)
         return dataset;
     }
 
-    void shuffleArray(xt::xarray<double> & array)
+void shuffleArray(xt::xarray<double> & array)
+{
+    // Get the number of rows and columns
+    std::size_t rows = array.shape(0);
+    std::size_t cols = array.shape(1);
+
+    // Create an index array to shuffle
+    xt::xarray<std::size_t> indices = xt::arange<std::size_t>(rows);
+
+    // Shuffle the indices
+    xt::random::shuffle(indices);
+
+    // Create a temporary array to hold the shuffled rows
+    xt::xarray<double> temp = xt::empty_like(array);
+
+    // Fill the temporary array with shuffled rows
+    for (std::size_t i = 0; i < rows; ++i)
     {
-        // Get the number of rows
-        std::size_t rows = array.shape(0);
-
-        // Create an index array to shuffle
-        xt::xarray<std::size_t> indices = xt::arange<std::size_t>(rows);
-
-        // Shuffle the indices
-        xt::random::shuffle(indices);
-
-        // Create a temporary array to hold the shuffled rows
-        xt::xarray<double> temp = xt::empty_like(array);
-
-        // Fill the temporary array with shuffled rows
-        for (std::size_t i = 0; i < rows; ++i)
+        for (std::size_t j = 0; j < cols; ++j)
         {
-            temp(i, 0) = array(indices(i), 0);
-            temp(i, 1) = array(indices(i), 1);
-            temp(i, 2) = array(indices(i), 2);
+            temp(i, j) = array(indices(i), j);
         }
-
-        // Copy the shuffled rows back to the original array
-        array = temp;
     }
+
+    // Copy the shuffled rows back to the original array
+    array = temp;
+}
 
     xarray<double> sigma(xarray<double> x)
     {

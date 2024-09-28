@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     std::string file_name = argv[1];
     std::string arg_epochs = argv[2];
     std::string arg_learning_rate = argv[3];
-
+    std::string prediction_mode = argv[4];
 
     int epochs = std::stoi(arg_epochs);    
     double lr = std::stof(arg_learning_rate);    
@@ -90,30 +90,38 @@ int main(int argc, char* argv[])
         y_test_proba(i, 0) = a3(0, 0); // shape (n, 1)
     }
 
-    // Convert proba to class prediction
-    xt::xarray<int> y_test_pred = empty<int>(y_test.shape()); // shape (n, 1)
-    for (int i = 0; i < y_test.shape(0); i++) {
-        if (y_test_proba(i, 0) <= 0.5) {
-            y_test_pred(i, 0) = 0;
-        } else {
-            y_test_pred(i, 0) = 1;
+    if (prediction_mode == "classification") {
+        // Convert proba to class prediction
+        xt::xarray<int> y_test_pred = empty<int>(y_test.shape()); // shape (n, 1)
+        for (int i = 0; i < y_test.shape(0); i++) {
+            if (y_test_proba(i, 0) <= 0.5) {
+                y_test_pred(i, 0) = 0;
+            } else {
+                y_test_pred(i, 0) = 1;
+            }
+        }
+
+        // Compute vector taking 1 if prediction is correct
+        xarray<int> true_pred = empty<int>(y_test.shape()); // shape (n, 1)
+        for (int i = 0; i < y_test.size(); i++) {
+            true_pred(i, 0) = (y_test(i, 0) == y_test_pred(i, 0)) ? 1 : 0; // Assign 1 or 0 based on the condition
+        } 
+
+        double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.shape(0);
+
+        std::cout << "\nPrecision:\n";
+        std::cout << precision << endl;
+        if (x_dataset_cols == 2) { // If dataset is two-dimensional, plot
+            gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
+            gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
         }
     }
+    
+    if (prediction_mode == "regression") {
+        gnuplot_ypred_ytrue(y_test, y_test_proba, "y pred vs y test");
+    }
 
-    // Compute vector taking 1 if prediction is correct
-    xarray<int> true_pred = empty<int>(y_test.shape()); // shape (n, 1)
-    for (int i = 0; i < y_test.size(); i++) {
-        true_pred(i, 0) = (y_test(i, 0) == y_test_pred(i, 0)) ? 1 : 0; // Assign 1 or 0 based on the condition
-    } 
-
-    std::cout << "\nPrecision:\n";
-    double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.shape(0);
-    std::cout << precision << endl;
-
-    // gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
-    // gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
     gnuplot_loss_plot(mse_array, "Loss");
-    gnuplot_ypred_ytrue(y_test, y_test_proba, "y pred vs y test");
     std::cout << "\nRMSE:\n";
     std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
 

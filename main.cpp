@@ -28,8 +28,15 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    // Open the file passed as argument
     std::string file_name = argv[1];
+    std::string arg_epochs = argv[2];
+    std::string arg_learning_rate = argv[3];
+
+
+    int epochs = std::stoi(arg_epochs);    
+    double lr = std::stof(arg_learning_rate);    
+
+    // Open the file passed as argument
     std::ifstream file(file_name);
 
     if (!file.is_open()) {
@@ -46,14 +53,14 @@ int main(int argc, char* argv[])
 
     // Split into train and test sets
     int train_size = abs(0.8 * dataset.shape(0));
-    
+
     xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::range(0, 2));
     xt::xarray<double> y_train = xt::view(dataset, xt::range(_, train_size), xt::range(2, 3));
     
     xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, 2));
     xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(2, 3)); // shape (n, 1)
 
-    std::tuple weights_biases = make_gradient_descent(x_train, y_train, 100, 0.1);
+    std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, lr);
 
     auto [w1, w2, w3, b1, b2, b3] = weights_biases;
 

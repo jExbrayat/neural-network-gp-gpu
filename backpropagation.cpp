@@ -28,11 +28,12 @@ make_gradient_descent(
 
     // Define constants
     int dataset_size = x_train.shape()[0];
+    int input_size = x_train.shape()[1];
 
     // Initialize network
 
     // Weights
-    xarray<double> w1 = xt::random::randn<double>({3, 2});
+    xarray<double> w1 = xt::random::randn<double>({3, input_size});
     xarray<double> w2 = xt::random::randn<double>({5, 3});
     xarray<double> w3 = xt::random::randn<double>({1, 5});
 
@@ -52,7 +53,7 @@ make_gradient_descent(
 
             // Input layer
             xarray<double> a0 = xt::view(x_train, i, xt::all());
-            a0 = a0.reshape({2, 1});
+            a0 = a0.reshape({input_size, 1});
 
             // First hidden layer
             auto z1 = xt::linalg::dot(w1, a0) + b1;
@@ -71,7 +72,7 @@ make_gradient_descent(
 
             // Make backpropagation
 
-            xarray<double> delta3 = (a3 - y_train(i, 0)) * sigma_derivative(z3);
+            xarray<double> delta3 = (a3(0, 0) - y_train(i, 0)) * sigma_derivative(z3);
             xarray<double> delta2 = linalg::dot(transpose(w3), delta3) * sigma_derivative(z2);
             xarray<double> delta1 = linalg::dot(transpose(w2), delta2) * sigma_derivative(z1);
 

@@ -46,6 +46,8 @@ int main(int argc, char* argv[])
 
     // Use xtensor-io to load the CSV data into an xtensor xarray
     xt::xarray<double> dataset = load_csv<double>(file, ',');
+    int input_csv_cols = dataset.shape(1);
+    int x_dataset_cols = input_csv_cols - 1;
     
     // Shuffle
     shuffleArray(dataset); 
@@ -54,8 +56,8 @@ int main(int argc, char* argv[])
     // Split into train and test sets
     int train_size = abs(1.0 * dataset.shape(0));
 
-    xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::range(0, 2));
-    xt::xarray<double> y_train = xt::view(dataset, xt::range(_, train_size), xt::range(2, 3));
+    xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::range(0, input_csv_cols - 1));
+    xt::xarray<double> y_train = xt::view(dataset, xt::range(_, train_size), xt::range(input_csv_cols - 1, input_csv_cols));
     
     xt::xarray<double> x_test = x_train;
     xt::xarray<double> y_test = y_train; // shape (n, 1)
@@ -70,7 +72,7 @@ int main(int argc, char* argv[])
 
         // Input layer
         xarray<double> a0 = xt::view(x_test, i, xt::all());
-        a0 = a0.reshape({2, 1});
+        a0 = a0.reshape({x_dataset_cols, 1});
 
         // First hidden layer
         auto z1 = xt::linalg::dot(w1, a0) + b1;
@@ -108,8 +110,8 @@ int main(int argc, char* argv[])
     double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.shape(0);
     std::cout << precision << endl;
 
-    gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
-    gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
+    // gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
+    // gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
     gnuplot_loss_plot(mse_array, "Loss");
 
     return 0;

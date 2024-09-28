@@ -17,6 +17,7 @@ std::tuple<
     xt::xarray<double>,
     xt::xarray<double>,
     xt::xarray<double>,
+    xt::xarray<double>,
     xt::xarray<double>>
 make_gradient_descent(
     xarray<double> x_train,
@@ -39,6 +40,8 @@ make_gradient_descent(
     xarray<double> b1 = xt::random::randn<double>({3, 1});
     xarray<double> b2 = xt::random::randn<double>({5, 1});
     xarray<double> b3 = xt::random::randn<double>({1, 1});
+
+    xarray<double> mse_array = zeros<double>({0}); 
 
     for (int epoch = 0; epoch < epochs; epoch++)
     {
@@ -63,7 +66,7 @@ make_gradient_descent(
             auto a3 = sigma(z3); // prediction, shape (1, 1)
 
             // Compute MSE
-            mse += std::pow(a3(1, 1) - y_train(i, 1), 2);
+            mse += std::pow(a3(1, 1) - y_train(i, 1), 2) / dataset_size;
 
             // Make backpropagation
 
@@ -107,7 +110,8 @@ make_gradient_descent(
             w3 -= learning_rate * gradient_w3;  
 
         }
+        mse_array = xt::concatenate(xtuple(mse_array, xarray<double>({mse})));
     }
 
-    return std::make_tuple(w1, w2, w3, b1, b2, b3);
+    return std::make_tuple(w1, w2, w3, b1, b2, b3, mse_array);
 }

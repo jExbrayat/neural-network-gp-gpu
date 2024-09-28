@@ -8,3 +8,5 @@ temp
 
 build
 !build/__init__
+
+debug.cpp

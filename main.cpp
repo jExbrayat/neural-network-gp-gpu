@@ -54,13 +54,13 @@ int main(int argc, char* argv[])
 
 
     // Split into train and test sets
-    int train_size = abs(1.0 * dataset.shape(0));
+    int train_size = abs(0.8 * dataset.shape(0));
 
     xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::range(0, input_csv_cols - 1));
     xt::xarray<double> y_train = xt::view(dataset, xt::range(_, train_size), xt::range(input_csv_cols - 1, input_csv_cols));
     
-    xt::xarray<double> x_test = x_train;
-    xt::xarray<double> y_test = y_train; // shape (n, 1)
+    xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, input_csv_cols - 1));
+    xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(input_csv_cols - 1, input_csv_cols));; // shape (n, 1)
 
     std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, lr);
 
@@ -113,6 +113,8 @@ int main(int argc, char* argv[])
     // gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
     // gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
     gnuplot_loss_plot(mse_array, "Loss");
+    std::cout << "\nRMSE:\n";
+    std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
 
     return 0;
 }

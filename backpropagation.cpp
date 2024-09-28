@@ -6,24 +6,19 @@
 #include <xtensor-blas/xlinalg.hpp>
 #include <tuple>
 #include <cmath>
+#include <vector>
 #include "utils.cpp"
 using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
 using namespace xt;
 
-std::tuple<
-    xt::xarray<double>,
-    xt::xarray<double>,
-    xt::xarray<double>,
-    xt::xarray<double>,
-    xt::xarray<double>,
-    xt::xarray<double>,
-    xt::xarray<double>>
+std::tuple<std::vector<xarray<double>>, std::vector<xarray<double>>, xarray<double>>
 make_gradient_descent(
     xarray<double> x_train,
     xarray<double> y_train, // shape must be (n, 1)
     int epochs,
-    float learning_rate)
+    float learning_rate,
+    std::vector<int> neurons_per_layer) // list of neurons in each layer
 {
 
     // Define constants
@@ -31,20 +26,22 @@ make_gradient_descent(
     int input_size = x_train.shape()[1];
 
     // Initialize network
+    int num_layers = neurons_per_layer.size();
+    std::vector<xarray<double>> weights(num_layers);
+    std::vector<xarray<double>> biases(num_layers);
 
-    // Weights
-    xarray<double> w1 = xt::random::randn<double>({3, input_size});
-    xarray<double> w2 = xt::random::randn<double>({5, 3});
-    xarray<double> w3 = xt::random::randn<double>({1, 5});
+    // Initialize weights and biases for each layer
+    weights[0] = xt::random::randn<double>({neurons_per_layer[0], input_size});
+    biases[0] = xt::random::randn<double>({neurons_per_layer[0], 1});
 
-    // Biases
-    xarray<double> b1 = xt::random::randn<double>({3, 1});
-    xarray<double> b2 = xt::random::randn<double>({5, 1});
-    xarray<double> b3 = xt::random::randn<double>({1, 1});
+    for (int l = 1; l < num_layers; l++) {
+        weights[l] = xt::random::randn<double>({neurons_per_layer[l], neurons_per_layer[l - 1]});
+        biases[l] = xt::random::randn<double>({neurons_per_layer[l], 1});
+    }
 
     // Init mse array
     xarray<double> mse_array = xt::empty<double>({0});
-    
+
     for (int epoch = 0; epoch < epochs; epoch++)
     {
         float mse = 0;
@@ -54,47 +51,42 @@ make_gradient_descent(
             // Input layer
             xarray<double> a0 = xt::view(x_train, i, xt::all());
             a0 = a0.reshape({input_size, 1});
+            std::vector<xarray<double>> activations(num_layers + 1);
+            std::vector<xarray<double>> z_values(num_layers);
 
-            // First hidden layer
-            auto z1 = xt::linalg::dot(w1, a0) + b1;
-            auto a1 = sigma(z1);
+            activations[0] = a0;
 
-            // Second hidden layer
-            auto z2 = xt::linalg::dot(w2, a1) + b2;
-            auto a2 = sigma(z2);
+            // Forward propagation
+            for (int l = 0; l < num_layers; l++) {
+                z_values[l] = xt::linalg::dot(weights[l], activations[l]) + biases[l];
+                activations[l + 1] = sigma(z_values[l]);
+            }
 
-            // Third hidden layer
-            auto z3 = xt::linalg::dot(w3, a2) + b3;
-            auto a3 = sigma(z3); // prediction, shape (1, 1)
+            // Output layer (prediction)
+            xarray<double> a_final = activations[num_layers]; // the output after last layer
 
             // Compute MSE
-            mse += std::pow(a3(0, 0) - y_train(i, 0), 2) / dataset_size;
+            mse += std::pow(a_final(0, 0) - y_train(i, 0), 2) / dataset_size;
 
-            // Make backpropagation
+            // Backpropagation
+            std::vector<xarray<double>> deltas(num_layers);
+            deltas[num_layers - 1] = (a_final(0, 0) - y_train(i, 0)) * sigma_derivative(z_values[num_layers - 1]);
 
-            xarray<double> delta3 = (a3(0, 0) - y_train(i, 0)) * sigma_derivative(z3);
-            xarray<double> delta2 = linalg::dot(transpose(w3), delta3) * sigma_derivative(z2);
-            xarray<double> delta1 = linalg::dot(transpose(w2), delta2) * sigma_derivative(z1);
+            for (int l = num_layers - 2; l >= 0; l--) {
+                deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigma_derivative(z_values[l]);
+            }
 
-            xarray<double> gradient_b1 = delta1;
-            xarray<double> gradient_b2 = delta2;
-            xarray<double> gradient_b3 = delta3;
-
-            auto gradient_w1 = xt::linalg::dot(delta1, xt::transpose(a0));
-            auto gradient_w2 = xt::linalg::dot(delta2, xt::transpose(a1));
-            auto gradient_w3 = xt::linalg::dot(delta3, xt::transpose(a2));
-
-            // Updating biases and weights
-            b1 -= learning_rate * gradient_b1;
-            b2 -= learning_rate * gradient_b2; 
-            b3 -= learning_rate * gradient_b3; 
-            w1 -= learning_rate * gradient_w1;  
-            w2 -= learning_rate * gradient_w2;  
-            w3 -= learning_rate * gradient_w3;  
-
+            // Update weights and biases
+            for (int l = 0; l < num_layers; l++) {
+                auto gradient_w = xt::linalg::dot(deltas[l], xt::transpose(activations[l]));
+                auto gradient_b = deltas[l];
+                weights[l] -= learning_rate * gradient_w;
+                biases[l] -= learning_rate * gradient_b;
+            }
         }
+
         mse_array = xt::concatenate(xtuple(mse_array, xarray<double>({mse})));
     }
 
-    return std::make_tuple(w1, w2, w3, b1, b2, b3, mse_array);
+    return std::make_tuple(weights, biases, mse_array);
 }

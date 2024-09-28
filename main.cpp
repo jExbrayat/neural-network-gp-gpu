@@ -62,32 +62,28 @@ int main(int argc, char* argv[])
     xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, input_csv_cols - 1));
     xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(input_csv_cols - 1, input_csv_cols));; // shape (n, 1)
 
-    std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, lr);
+    std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, lr, vector<int> {10, 10, 1});
 
-    auto [w1, w2, w3, b1, b2, b3, mse_array] = weights_biases;
+    auto [weights, biases, mse_array] = weights_biases;
 
-    // Predict probas
-    xarray<double> y_test_proba = empty<double>(y_test.shape());
+    // Predict probabilities
+    xarray<double> y_test_proba = xt::empty<double>(y_test.shape());
+    int num_layers = weights.size(); // number of layers in the network
+
     for (int i = 0; i < y_test.shape(0); i++) {
-
+        
         // Input layer
-        xarray<double> a0 = xt::view(x_test, i, xt::all());
-        a0 = a0.reshape({x_dataset_cols, 1});
+        xarray<double> a = xt::view(x_test, i, xt::all());
+        a = a.reshape({x_dataset_cols, 1}); // Reshape to match input dimension
 
-        // First hidden layer
-        auto z1 = xt::linalg::dot(w1, a0) + b1;
-        auto a1 = sigma(z1);
+        // Forward propagation through all layers
+        for (int l = 0; l < num_layers; l++) {
+            auto z = xt::linalg::dot(weights[l], a) + biases[l];
+            a = sigma(z);  // Apply the activation function to each layer output
+        }
 
-        // Second hidden layer
-        auto z2 = xt::linalg::dot(w2, a1) + b2;
-        auto a2 = sigma(z2);
-
-        // Third hidden layer
-        auto z3 = xt::linalg::dot(w3, a2) + b3;
-        auto a3 = sigma(z3); // prediction, shape (1, 1)
-
-        // Append to the prediction vector
-        y_test_proba(i, 0) = a3(0, 0); // shape (n, 1)
+        // Append the final output (prediction) to the prediction vector
+        y_test_proba(i, 0) = a(0, 0);  // shape (n, 1)
     }
 
     if (prediction_mode == "classification") {

@@ -65,8 +65,8 @@ int main(int argc, char* argv[])
     auto [w1, w2, w3, b1, b2, b3, mse_array] = weights_biases;
 
     // Predict probas
-    xarray<double> y_test_proba = zeros<double>({0, 1});
-    for (int i = 0; i < y_test.size(); i++) {
+    xarray<double> y_test_proba = empty<double>(y_test.shape());
+    for (int i = 0; i < y_test.shape(0); i++) {
 
         // Input layer
         xarray<double> a0 = xt::view(x_test, i, xt::all());
@@ -85,12 +85,12 @@ int main(int argc, char* argv[])
         auto a3 = sigma(z3); // prediction, shape (1, 1)
 
         // Append to the prediction vector
-        y_test_proba = concatenate(xt::xtuple(y_test_proba, a3), 0); // shape (n, 1)
+        y_test_proba(i, 0) = a3(0, 0); // shape (n, 1)
     }
 
     // Convert proba to class prediction
-    xt::xarray<int> y_test_pred = xt::empty<int>(y_test_proba.shape()); // shape (n, 1)
-    for (int i = 0; i < y_test_proba.shape()[0]; i++) {
+    xt::xarray<int> y_test_pred = empty<int>(y_test.shape()); // shape (n, 1)
+    for (int i = 0; i < y_test.shape(0); i++) {
         if (y_test_proba(i, 0) <= 0.5) {
             y_test_pred(i, 0) = 0;
         } else {
@@ -104,9 +104,9 @@ int main(int argc, char* argv[])
         true_pred(i, 0) = (y_test(i, 0) == y_test_pred(i, 0)) ? 1 : 0; // Assign 1 or 0 based on the condition
     } 
 
-    cout << "\nPrecision:\n";
-    double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.size();
-    cout << precision << endl;
+    std::cout << "\nPrecision:\n";
+    double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.shape(0);
+    std::cout << precision << endl;
 
     gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
     gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");

@@ -48,6 +48,37 @@ void gnuplot(xarray<double> two_dimensional_dataset, xarray<int> true_pred, stri
     std::system(("unset GTK_PATH && gnuplot-x11 -persist " + gnuplot_commands_path).c_str());
 }
 
+void gnuplot_ypred_ytrue(const xt::xarray<double>& y_true, const xt::xarray<double>& y_pred, const std::string& plot_title) {
+    // Define paths
+    std::string gnuplot_commands_path = "temp/gnuplot_commands.gp";
+    std::string data_path = "temp/gnuplot.dat";
+
+    // Retrieve dataset size (assuming y_true and y_pred are both (n, 1) shape)
+    int n_rows = y_true.shape()[0];
+
+    // Create a data file
+    std::ofstream data(data_path);
+    for (int i = 0; i < n_rows; i++) {
+        data << y_true(i, 0) << " " << y_pred(i, 0) << "\n";
+    }
+    data.close();
+
+    // Create Gnuplot command file
+    std::ofstream gnuplot_commands(gnuplot_commands_path);
+    gnuplot_commands << "set terminal wxt size 1200,800\n";  // Set window size
+    gnuplot_commands << "set xlabel 'y_true'\n";              // Set x-axis label
+    gnuplot_commands << "set ylabel 'y_pred'\n";              // Set y-axis label
+    gnuplot_commands << "set title '" + plot_title + "'\n";   // Set plot title
+    gnuplot_commands << "set pointsize 1.5\n";                // Set point size
+    gnuplot_commands << "plot 'temp/gnuplot.dat' using 1:2 with points pt 7 notitle\n"; // Plot y_true vs y_pred
+
+    // Close the Gnuplot command file
+    gnuplot_commands.close();
+
+    // Execute Gnuplot
+    std::system(("gnuplot -persist " + gnuplot_commands_path).c_str());
+}
+
 void gnuplot_loss_plot(xt::xarray<double> loss_values, std::string plot_title)
 {
     // Define paths for Gnuplot commands and data

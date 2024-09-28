@@ -113,6 +113,7 @@ int main(int argc, char* argv[])
     // gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
     // gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
     gnuplot_loss_plot(mse_array, "Loss");
+    gnuplot_ypred_ytrue(y_test, y_test_proba, "y pred vs y test");
     std::cout << "\nRMSE:\n";
     std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
 

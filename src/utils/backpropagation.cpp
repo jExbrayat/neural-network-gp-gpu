@@ -7,7 +7,6 @@
 #include <tuple>
 #include <cmath>
 #include <vector>
-#include "utils.cpp"
 using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
 using namespace xt;

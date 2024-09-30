@@ -5,9 +5,10 @@
 #include <xtensor/xrandom.hpp>
 #include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xcsv.hpp>
-#include "definition.hpp"
-#include "backpropagation.cpp"
 #include <nlohmann/json.hpp> // Include the nlohmann/json library
+#include "src/definition.hpp"
+#include "src/utils/utils.cpp"
+#include "src/utils/backpropagation.cpp"
 using namespace xt::placeholders;  // to enable _ syntax
 using namespace std;
 using namespace xt;

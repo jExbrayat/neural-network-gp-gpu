@@ -42,6 +42,7 @@ make_gradient_descent(
     // Init mse array
     xarray<double> mse_array = xt::empty<double>({0});
 
+    // Make gradient descent
     for (int epoch = 0; epoch < epochs; epoch++)
     {
         float mse = 0;

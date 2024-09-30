@@ -77,10 +77,10 @@ int main(int argc, char *argv[])
 
     xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, input_csv_cols - 1));
     xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(input_csv_cols - 1, input_csv_cols));
-    ; // shape (n, 1)
+    // shape (n, 1)
 
+    // Find good weights
     std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, learning_rate, network_architecture);
-
     auto [weights, biases, mse_array] = weights_biases;
 
     // Predict probabilities
@@ -105,6 +105,8 @@ int main(int argc, char *argv[])
         y_test_proba(i, 0) = a(0, 0); // shape (n, 1)
     }
 
+
+    // Display results
     if (prediction_mode == "classification")
     {
         // Convert proba to class prediction

@@ -33,7 +33,8 @@ make_gradient_descent(
     weights[0] = xt::random::randn<double>({neurons_per_layer[0], input_size});
     biases[0] = xt::random::randn<double>({neurons_per_layer[0], 1});
 
-    for (int l = 1; l < num_layers; l++) {
+    for (int l = 1; l < num_layers; l++)
+    {
         weights[l] = xt::random::randn<double>({neurons_per_layer[l], neurons_per_layer[l - 1]});
         biases[l] = xt::random::randn<double>({neurons_per_layer[l], 1});
     }
@@ -56,7 +57,8 @@ make_gradient_descent(
             activations[0] = a0;
 
             // Forward propagation
-            for (int l = 0; l < num_layers; l++) {
+            for (int l = 0; l < num_layers; l++)
+            {
                 z_values[l] = xt::linalg::dot(weights[l], activations[l]) + biases[l];
                 activations[l + 1] = sigma(z_values[l]);
             }
@@ -71,12 +73,14 @@ make_gradient_descent(
             std::vector<xarray<double>> deltas(num_layers);
             deltas[num_layers - 1] = (a_final(0, 0) - y_train(i, 0)) * sigma_derivative(z_values[num_layers - 1]);
 
-            for (int l = num_layers - 2; l >= 0; l--) {
+            for (int l = num_layers - 2; l >= 0; l--)
+            {
                 deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigma_derivative(z_values[l]);
             }
 
             // Update weights and biases
-            for (int l = 0; l < num_layers; l++) {
+            for (int l = 0; l < num_layers; l++)
+            {
                 auto gradient_w = xt::linalg::dot(deltas[l], xt::transpose(activations[l]));
                 auto gradient_b = deltas[l];
                 weights[l] -= learning_rate * gradient_w;

@@ -8,4 +8,5 @@ build
 !build/__init__
 
 debug.cpp
+debug
 config.json

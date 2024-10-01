@@ -155,7 +155,7 @@ xarray<double> sigma_derivative(xarray<double> x)
 }
 
 
-xarray<uint8_t> transform_mnist_data(vector<vector<uint8_t>> x, std::array<size_t, 2> shape) {
+xarray<uint8_t> transform_mnist_images(vector<vector<uint8_t>> x, std::array<size_t, 2> shape) {
     
     // Flatten the 2D vector into 1D vector
     std::vector<uint8_t> flat_data;
@@ -167,4 +167,10 @@ xarray<uint8_t> transform_mnist_data(vector<vector<uint8_t>> x, std::array<size_
     xt::xarray<uint8_t> x_tensor = xt::adapt(flat_data, shape);
 
     return x_tensor;
+}
+
+xarray<int> transform_mnist_labels(vector<uint8_t> y, array<size_t, 2> shape) {
+    
+    xt::xarray<uint8_t> y_tensor = xt::adapt(y, shape);
+    return y_tensor;
 }

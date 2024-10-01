@@ -1,7 +1,10 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 #include <xtensor/xarray.hpp>
+#include <iostream>
+#include <xtensor/xio.hpp>
 using namespace xt;
+using namespace std;
 
 xarray<double> sigma(xarray<double> x);
 xarray<double> sigma_derivative(xarray<double> x);
@@ -15,6 +18,6 @@ make_gradient_descent(
     int epochs,
     float learning_rate,
     std::vector<int> neurons_per_layer); // list of neurons in each layer
-
+xarray<uint8_t> transform_mnist_data(vector<vector<uint8_t>> x, std::array<size_t, 2> shape);
 
 #endif // UTILS_HPP

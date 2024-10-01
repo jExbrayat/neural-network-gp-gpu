@@ -4,6 +4,7 @@
 #include <xtensor/xio.hpp>
 #include <xtensor/xview.hpp>
 #include <xtensor/xrandom.hpp>
+#include <xtensor/xadapt.hpp>
 #include <fstream>
 using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
@@ -151,4 +152,19 @@ xarray<double> sigma(xarray<double> x)
 xarray<double> sigma_derivative(xarray<double> x)
 {
     return sigma(x) * (1 - sigma(x));
+}
+
+
+xarray<uint8_t> transform_mnist_data(vector<vector<uint8_t>> x, std::array<size_t, 2> shape) {
+    
+    // Flatten the 2D vector into 1D vector
+    std::vector<uint8_t> flat_data;
+    for (const auto& image : x) {
+        flat_data.insert(flat_data.end(), image.begin(), image.end());
+    }
+
+    // Create an xtensor with the flattened data and reshape it
+    xt::xarray<uint8_t> x_tensor = xt::adapt(flat_data, shape);
+
+    return x_tensor;
 }

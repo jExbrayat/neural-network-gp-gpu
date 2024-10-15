@@ -14,8 +14,8 @@ using namespace xt;
 
 std::tuple<std::vector<xarray<double>>, std::vector<xarray<double>>, xarray<double>>
 make_gradient_descent(
-    xarray<double> x_train,
-    xarray<double> y_train, // shape must be (n, 1)
+    xarray<double> x_train, // shape (n, k_in)
+    xarray<double> y_train, // shape (n, k_out)
     int epochs,
     float learning_rate,
     std::vector<int> neurons_per_layer) // list of neurons in each layer
@@ -67,13 +67,18 @@ make_gradient_descent(
 
             // Output layer (prediction)
             xarray<double> a_final = activations[num_layers]; // the output after last layer
+                                                                  // shape (1, k_out)
+
+            cout << endl<< a_final.shape(0) << endl << a_final.shape(1) <<endl;
 
             // Compute MSE
-            mse += std::pow(a_final(0, 0) - y_train(i, 0), 2) / dataset_size;
+            xarray<double> mse_for_individual = xt::pow(a_final - xt::view(y_train, i, xt::all()), 2) / input_size;
+            double mse = mse + xt::sum(mse_for_individual)() / dataset_size;
 
             // Backpropagation
             std::vector<xarray<double>> deltas(num_layers);
-            deltas[num_layers - 1] = (a_final(0, 0) - y_train(i, 0)) * sigma_derivative(z_values[num_layers - 1]);
+            deltas[num_layers - 1] = (a_final - xt::view(y_train, i, xt::all())) * sigma_derivative(z_values[num_layers - 1]);
+            // shape [(1, k_out) - (1, k_out)] * (1, k_out) 
 
             for (int l = num_layers - 2; l >= 0; l--)
             {

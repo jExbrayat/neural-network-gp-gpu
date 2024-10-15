@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     }
     xt::xarray<double> dataset = load_csv<double>(dataset_file, ',');
     int input_csv_cols = dataset.shape(1);
-    int x_dataset_cols = input_csv_cols - 1;
+    int x_dataset_cols = input_csv_cols;
 
     // Shuffle
     shuffleArray(dataset);
@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
     // Split into train and test sets
     int train_size = abs(0.8 * dataset.shape(0));
 
-    xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::range(0, input_csv_cols - 1));
-    xt::xarray<double> y_train = xt::view(dataset, xt::range(_, train_size), xt::range(input_csv_cols - 1, input_csv_cols));
+    xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::all());
+    xt::xarray<double> y_train = x_train;
 
     xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, input_csv_cols - 1));
     xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(input_csv_cols - 1, input_csv_cols));

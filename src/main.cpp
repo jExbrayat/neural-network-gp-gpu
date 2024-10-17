@@ -75,35 +75,36 @@ int main(int argc, char *argv[])
     xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::all());
     xt::xarray<double> y_train = x_train;
 
-    xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::range(0, input_csv_cols - 1));
-    xt::xarray<double> y_test = xt::view(dataset, xt::range(train_size, _), xt::range(input_csv_cols - 1, input_csv_cols));
-    // shape (n, 1)
+    xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::all());
+    xt::xarray<double> y_test = x_test;
+    // shape (n, k)
 
     // Find good weights
     std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, learning_rate, network_architecture);
     auto [weights, biases, mse_array] = weights_biases;
 
+    // TODO: write function for feed forward
     // Predict probabilities
     xarray<double> y_test_proba = xt::empty<double>(y_test.shape());
     int num_layers = weights.size(); // number of layers in the network
 
-    for (int i = 0; i < y_test.shape(0); i++)
-    {
+    // for (int i = 0; i < y_test.shape(0); i++)
+    // {
 
-        // Input layer
-        xarray<double> a = xt::view(x_test, i, xt::all());
-        a = a.reshape({x_dataset_cols, 1}); // Reshape to match input dimension
+    //     // Input layer
+    //     xarray<double> a = xt::view(x_test, i, xt::all());
+    //     a = a.reshape({x_dataset_cols, 1}); // Reshape to match input dimension
 
-        // Forward propagation through all layers
-        for (int l = 0; l < num_layers; l++)
-        {
-            auto z = xt::linalg::dot(weights[l], a) + biases[l];
-            a = sigma(z); // Apply the activation function to each layer output
-        }
+    //     // Forward propagation through all layers
+    //     for (int l = 0; l < num_layers; l++)
+    //     {
+    //         auto z = xt::linalg::dot(weights[l], a) + biases[l];
+    //         a = sigma(z); // Apply the activation function to each layer output
+    //     }
 
-        // Append the final output (prediction) to the prediction vector
-        y_test_proba(i, 0) = a(0, 0); // shape (n, 1)
-    }
+    //     // Append the final output (prediction) to the prediction vector
+    //     y_test_proba(i, 0) = a(0, 0); // shape (n, 1)
+    // }
 
 
     // Display results

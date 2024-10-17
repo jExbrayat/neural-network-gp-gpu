@@ -219,3 +219,31 @@ xarray<int> transform_mnist_labels(vector<uint8_t> y, array<size_t, 2> shape) {
 xarray<double> scale_data(xarray<double> x) {
     return (x - xt::amin(x)()) / (xt::amax(x)() - xt::amin(x)());
 }
+
+// Function to save an xtensor xarray to a CSV file
+void save_xarray_to_csv(const xt::xarray<double>& array, const std::string& file_path) {
+    std::ofstream file(file_path);
+    if (file.is_open()) {
+        for (size_t i = 0; i < array.shape(0); ++i) {
+            for (size_t j = 0; j < array.shape(1); ++j) {
+                file << array(i, j);
+                if (j != array.shape(1) - 1) {
+                    file << ",";  // Add comma between elements
+                }
+            }
+            file << "\n";  // New line at the end of each row
+        }
+        file.close();
+    } else {
+        std::cerr << "Error opening file " << file_path << std::endl;
+    }
+}
+
+// Function to dump the vectors of weights and biases (for each layer)
+void dump_model(const std::vector<xt::xarray<double>>& weights, const std::vector<xt::xarray<double>>& biases, const xt::xarray<double>& mse_array, string dir_path) {
+    for (size_t i = 0; i < weights.size(); ++i) {
+        save_xarray_to_csv(weights[i], dir_path + "/" + "weights_layer_" + std::to_string(i) + ".csv");
+        save_xarray_to_csv(biases[i], dir_path + "/" + "biases_layer_" + std::to_string(i) + ".csv");
+    }
+    save_xarray_to_csv(mse_array, dir_path + "/" + "loss.csv");
+}

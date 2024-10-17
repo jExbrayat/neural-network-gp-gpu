@@ -121,5 +121,7 @@ int main(int argc, char *argv[])
     std::cout << "\nRMSE:\n";
     std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
 
+    dump_model(weights, biases, mse_array, "models/junk");
+
     return 0;
 }

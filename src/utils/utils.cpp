@@ -116,6 +116,47 @@ void gnuplot_loss_plot(xt::xarray<double> loss_values, std::string plot_title)
     std::system(("gnuplot -persist " + gnuplot_commands_path).c_str());
 }
 
+void gnuplot_image_plot(xt::xarray<double> image_values, std::string plot_title)
+{
+    // Define paths for Gnuplot commands and data
+    std::string gnuplot_commands_path = "temp/gnuplot_image_commands.gp";
+    std::string data_path = "temp/gnuplot_image.dat";
+
+    // Retrieve dataset size
+    int img_size = image_values.shape()[0];
+    int img_dim = std::sqrt(img_size);  // Assume it's a square image
+
+    // Create a data file for Gnuplot
+    std::ofstream data(data_path);
+    for (int i = 0; i < img_dim; ++i)
+    {
+        for (int j = 0; j < img_dim; ++j)
+        {
+            // Write the image values: coordinates (i, j), pixel intensity
+            data << i << " " << j << " " << image_values(i * img_dim + j) << std::endl;
+        }
+        data << std::endl; // Separate rows with a blank line for Gnuplot
+    }
+    data.close();
+
+    // Create the Gnuplot command file
+    std::ofstream gnuplot_commands(gnuplot_commands_path);
+    gnuplot_commands << "set terminal wxt size 1200,1200\n";                                       // Set window size
+    gnuplot_commands << "set xlabel 'X-axis'\n";                                                   // Set x-axis label
+    gnuplot_commands << "set ylabel 'Y-axis'\n";                                                   // Set y-axis label
+    gnuplot_commands << "set title '" + plot_title + "'\n";                                        // Set plot title
+    gnuplot_commands << "unset key\n";                                                             // Disable legend
+    gnuplot_commands << "set size square\n";                                                       // Set plot to square
+    gnuplot_commands << "set palette gray\n";                                                      // Set grayscale palette
+    gnuplot_commands << "plot '" + data_path + "' using 1:2:3 with image\n";                       // Plot the image
+
+    gnuplot_commands.close();
+
+    // Execute the Gnuplot command file
+    std::system(("gnuplot -persist " + gnuplot_commands_path).c_str());
+}
+
+
 void shuffleArray(xt::xarray<double> &array)
 {
     // Get the number of rows and columns

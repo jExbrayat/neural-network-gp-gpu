@@ -83,71 +83,28 @@ int main(int argc, char *argv[])
     std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, learning_rate, network_architecture);
     auto [weights, biases, mse_array] = weights_biases;
 
-    // TODO: write function for feed forward
-    // Predict probabilities
-    xarray<double> y_test_proba = xt::empty<double>(y_test.shape());
+
+    // Predict one output to check result
     int num_layers = weights.size(); // number of layers in the network
+    int i = 0; // Observation id
 
-    // for (int i = 0; i < y_test.shape(0); i++)
-    // {
+    // Set input layer
+    xarray<double> a = xt::view(x_test, i, xt::all());
+    a = a.reshape({x_dataset_cols, 1}); // Reshape to match input dimension
 
-    //     // Input layer
-    //     xarray<double> a = xt::view(x_test, i, xt::all());
-    //     a = a.reshape({x_dataset_cols, 1}); // Reshape to match input dimension
-
-    //     // Forward propagation through all layers
-    //     for (int l = 0; l < num_layers; l++)
-    //     {
-    //         auto z = xt::linalg::dot(weights[l], a) + biases[l];
-    //         a = sigma(z); // Apply the activation function to each layer output
-    //     }
-
-    //     // Append the final output (prediction) to the prediction vector
-    //     y_test_proba(i, 0) = a(0, 0); // shape (n, 1)
-    // }
-
-
-    // Display results
-    if (prediction_mode == "classification")
+    // Forward propagation through all layers
+    for (int l = 0; l < num_layers; l++)
     {
-        // Convert proba to class prediction
-        xt::xarray<int> y_test_pred = empty<int>(y_test.shape()); // shape (n, 1)
-        for (int i = 0; i < y_test.shape(0); i++)
-        {
-            if (y_test_proba(i, 0) <= 0.5)
-            {
-                y_test_pred(i, 0) = 0;
-            }
-            else
-            {
-                y_test_pred(i, 0) = 1;
-            }
-        }
-
-        // Compute vector taking 1 if prediction is correct
-        xarray<int> true_pred = empty<int>(y_test.shape()); // shape (n, 1)
-        for (int i = 0; i < y_test.size(); i++)
-        {
-            true_pred(i, 0) = (y_test(i, 0) == y_test_pred(i, 0)) ? 1 : 0; // Assign 1 or 0 based on the condition
-        }
-
-        double precision = std::accumulate(true_pred.begin(), true_pred.end(), 0.0) / y_test.shape(0);
-
-        std::cout << "\nPrecision:\n";
-        std::cout << precision << endl;
-        if (x_dataset_cols == 2)
-        { // If dataset is two-dimensional, plot
-            gnuplot(x_test, y_test_pred, "Dataset coloured according to the predicted cluster");
-            gnuplot(x_test, true_pred, "Dataset coloured according to correctness of prediction");
-        }
+        auto z = xt::linalg::dot(weights[l], a) + biases[l];
+        a = sigma(z); // Apply the activation function to each layer output
     }
+    // a is the predicted value for the target value y_test[i]
 
-    if (prediction_mode == "regression")
-    {
-        gnuplot_ypred_ytrue(y_test, y_test_proba, "y pred vs y test");
-    }
-
+    auto a_plotted = a.reshape({a.size()});
     gnuplot_loss_plot(mse_array, "Loss");
+    gnuplot_loss_plot(a_plotted, "Autoencoded series");
+    cout << endl << a_plotted.shape(0) << "," << a.shape(1);
+    cout << endl << mse_array.shape(0) << "," << mse_array.shape(1);
     std::cout << "\nRMSE:\n";
     std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
 

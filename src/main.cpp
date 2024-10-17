@@ -9,6 +9,7 @@
 #include "src/definition.hpp"
 #include "src/utils/utils.cpp"
 #include "src/utils/backpropagation.cpp"
+#include "src/utils/mnist_reader.hpp"
 using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
 using namespace xt;
@@ -56,31 +57,40 @@ int main(int argc, char *argv[])
     std::vector<int> network_architecture = config["network_architecture"];
 
     // Use xtensor-io to load the CSV data into an xtensor xarray
-    std::ifstream dataset_file(dataset_path);
-    if (!dataset_file.is_open())
-    {
-        std::cerr << "Error: Could not open file " << dataset_path << std::endl;
-        return 1;
+    xt::xarray<double> x_train;
+    xt::xarray<double> y_train;
+    xt::xarray<double> x_test;
+    xt::xarray<double> y_test;
+    if (dataset_path == "mnist") {
+
+        auto dataset = mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>("datasets/mnist_data");    
+        x_train = transform_mnist_images(dataset.training_images, {dataset.training_images.size(), 784}); // shape (N, 784)
+        y_train = transform_mnist_labels(dataset.training_labels, {dataset.training_labels.size(), 1}); // shape (N, 1)
+        x_test = transform_mnist_images(dataset.test_images, {dataset.test_images.size(), 784});
+        y_test = transform_mnist_labels(dataset.test_labels, {dataset.test_labels.size(), 1});
+    
+    } else {
+        std::ifstream dataset_file(dataset_path);
+        if (!dataset_file.is_open())
+        {
+            std::cerr << "Error: Could not open file " << dataset_path << std::endl;
+            return 1;
+        }
+        xt::xarray<double> dataset = load_csv<double>(dataset_file, ',');
     }
-    xt::xarray<double> dataset = load_csv<double>(dataset_file, ',');
-    int input_csv_cols = dataset.shape(1);
+
+    int input_csv_cols = x_train.shape(1);
     int x_dataset_cols = input_csv_cols;
 
     // Shuffle
-    shuffleArray(dataset);
+    // TODO: does it work ?
+    // shuffleArray(dataset);
 
-    // Split into train and test sets
-    int train_size = abs(0.8 * dataset.shape(0));
-
-    xt::xarray<double> x_train = xt::view(dataset, xt::range(_, train_size), xt::all());
-    xt::xarray<double> y_train = x_train;
-
-    xt::xarray<double> x_test = xt::view(dataset, xt::range(train_size, _), xt::all());
-    xt::xarray<double> y_test = x_test;
-    // shape (n, k)
-
+    // take subdataset
+    x_train = xt::view(x_train, xt::range(0, 100), xt::all());
+    
     // Find good weights
-    std::tuple weights_biases = make_gradient_descent(x_train, y_train, epochs, learning_rate, network_architecture);
+    std::tuple weights_biases = make_gradient_descent(x_train, x_train, epochs, learning_rate, network_architecture);
     auto [weights, biases, mse_array] = weights_biases;
 
 
@@ -102,9 +112,8 @@ int main(int argc, char *argv[])
 
     auto a_plotted = a.reshape({a.size()});
     gnuplot_loss_plot(mse_array, "Loss");
-    gnuplot_loss_plot(a_plotted, "Autoencoded series");
-    cout << endl << a_plotted.shape(0) << "," << a.shape(1);
-    cout << endl << mse_array.shape(0) << "," << mse_array.shape(1);
+    gnuplot_image_plot(a_plotted, "autoencoded img");
+    cout << endl << " prediction shape " << a_plotted.shape(0) << "," << a.shape(1);
     std::cout << "\nRMSE:\n";
     std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
 

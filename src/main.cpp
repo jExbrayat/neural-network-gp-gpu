@@ -86,8 +86,12 @@ int main(int argc, char *argv[])
     // TODO: does it work ?
     // shuffleArray(dataset);
 
-    // take subdataset
+    // Take subdataset
     x_train = xt::view(x_train, xt::range(0, 100), xt::all());
+    
+    // Scale images to [0; 1]
+    x_train = scale_data(x_train);
+    x_test = scale_data(x_test);
     
     // Find good weights
     std::tuple weights_biases = make_gradient_descent(x_train, x_train, epochs, learning_rate, network_architecture);

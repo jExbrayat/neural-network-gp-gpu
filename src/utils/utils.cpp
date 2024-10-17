@@ -215,3 +215,7 @@ xarray<int> transform_mnist_labels(vector<uint8_t> y, array<size_t, 2> shape) {
     xt::xarray<uint8_t> y_tensor = xt::adapt(y, shape);
     return y_tensor;
 }
+
+xarray<double> scale_data(xarray<double> x) {
+    return (x - xt::amin(x)()) / (xt::amax(x)() - xt::amin(x)());
+}

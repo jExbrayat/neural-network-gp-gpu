@@ -21,10 +21,10 @@ make_gradient_descent(
     std::vector<int> neurons_per_layer) // list of neurons in each layer
 {
 
-    cout << "x_train";
-    cout << endl<< x_train.shape(0) << "," << x_train.shape(1) <<endl;
-    cout << "y_train";
-    cout << endl<< y_train.shape(0) << "," << y_train.shape(1) <<endl;
+    // cout << "x_train";
+    // cout << endl<< x_train.shape(0) << "," << x_train.shape(1) <<endl;
+    // cout << "y_train";
+    // cout << endl<< y_train.shape(0) << "," << y_train.shape(1) <<endl;
 
 
     // Define constants
@@ -39,15 +39,15 @@ make_gradient_descent(
     // Initialize weights and biases for each layer
     weights[0] = xt::random::randn<double>({neurons_per_layer[0], input_size});
     biases[0] = xt::random::randn<double>({neurons_per_layer[0], 1});
-    cout << "weights";
-    cout << endl<< weights[0].shape(0) << "," << weights[0].shape(1) <<endl;
+    // cout << "weights";
+    // cout << endl<< weights[0].shape(0) << "," << weights[0].shape(1) <<endl;
 
 
     for (int l = 1; l < num_layers; l++)
     {
         weights[l] = xt::random::randn<double>({neurons_per_layer[l], neurons_per_layer[l - 1]});
         biases[l] = xt::random::randn<double>({neurons_per_layer[l], 1});
-        cout << endl<< weights[l].shape(0) << "," << weights[l].shape(1) <<endl;
+        // cout << endl<< weights[l].shape(0) << "," << weights[l].shape(1) <<endl;
     }
 
 
@@ -57,6 +57,8 @@ make_gradient_descent(
     // Make gradient descent
     for (int epoch = 0; epoch < epochs; epoch++)
     {
+        cout << endl << "Epoch: " << epoch << endl;
+
         float mse = 0;
         for (int i = 0; i < dataset_size; i++)
         {
@@ -69,8 +71,8 @@ make_gradient_descent(
             std::vector<xarray<double>> z_values(num_layers);
 
             activations[0] = a0;
-            cout << "a0" << endl;
-            cout << activations[0].shape(0) << "," << activations[0].shape(1) <<endl;
+            // cout << "a0" << endl;
+            // cout << activations[0].shape(0) << "," << activations[0].shape(1) <<endl;
 
 
             // Forward propagation
@@ -79,16 +81,16 @@ make_gradient_descent(
                 z_values[l] = xt::linalg::dot(weights[l], activations[l]) + biases[l];
                 // (n0, k_in) dot (k_in, 1) + (n0, 1) = (n0, 1) for layer 0 
                 activations[l + 1] = sigma(z_values[l]);
-                cout << "z and a" << endl;
-                cout << z_values[l].shape(0) << "," << z_values[l].shape(1) <<endl;
-                cout << endl<< activations[l+1].shape(0) << "," << activations[l+1].shape(1) <<endl;
+                // cout << "z and a" << endl;
+                // cout << z_values[l].shape(0) << "," << z_values[l].shape(1) <<endl;
+                // cout << endl<< activations[l+1].shape(0) << "," << activations[l+1].shape(1) <<endl;
             }
 
             // Output layer (prediction)
             xarray<double> a_final = activations[num_layers]; // the output at last layer
                                                                   // shape (k_out, 1)
 
-            cout << endl<< a_final.shape(0) << "," << a_final.shape(1) <<endl;
+            // cout << endl<< a_final.shape(0) << "," << a_final.shape(1) <<endl;
 
             // Retrieve and reshape target value
             xarray<double> y_train_i = xt::view(y_train, i, xt::all());
@@ -104,8 +106,8 @@ make_gradient_descent(
             deltas[num_layers - 1] = (a_final - y_train_i) * sigma_derivative(z_values[num_layers - 1]);
             // shape ((k_out, 1) - (k_out, 1)) * (k_out, 1)  = (k_out, 1)
 
-            cout << "deltas" << endl;
-            cout << deltas[num_layers -1].shape(0) << "," << deltas[num_layers -1].shape(1) <<endl;
+            // cout << "deltas" << endl;
+            // cout << deltas[num_layers -1].shape(0) << "," << deltas[num_layers -1].shape(1) <<endl;
 
             for (int l = num_layers - 2; l >= 0; l--)
             {
@@ -113,16 +115,16 @@ make_gradient_descent(
                 deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigma_derivative(z_values[l]);
                 // transpose(k_out, n_neurons) dot (k_out, 1) * (n_neurons, 1) = (n_neurons, 1)
 
-                cout << deltas[l].shape(0) << "," << deltas[l].shape(1) <<endl;
+                // cout << deltas[l].shape(0) << "," << deltas[l].shape(1) <<endl;
                 
             }
 
             // Update weights and biases
             for (int l = 0; l < num_layers; l++)
             {
-                cout << deltas[l].shape(0) << "," << deltas[l].shape(1) <<endl;
-                cout << activations[l].shape(0) << "," << activations[l].shape(1) <<endl;
-                cout << endl;
+                // cout << deltas[l].shape(0) << "," << deltas[l].shape(1) <<endl;
+                // cout << activations[l].shape(0) << "," << activations[l].shape(1) <<endl;
+                // cout << endl;
                 auto gradient_w = xt::linalg::dot(deltas[l], xt::transpose(activations[l]));
                 auto gradient_b = deltas[l];
                 weights[l] -= learning_rate * gradient_w;

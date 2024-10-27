@@ -12,3 +12,10 @@ debug
 config.json
 
 notes.md
+
+xtl
+libraries
+xtensor-blas
+xtensor
+
+compile_command

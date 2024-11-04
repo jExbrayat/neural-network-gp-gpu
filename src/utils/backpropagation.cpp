@@ -7,6 +7,7 @@
 #include <tuple>
 #include <cmath>
 #include <vector>
+#include <optional>
 #include <src/definition.hpp>
 #include <string>
 using namespace xt::placeholders; // to enable _ syntax
@@ -18,34 +19,38 @@ void print_shapes(xarray<double> array, string name) {
     cout << array.shape(0) << ", " << array.shape(1) << std::endl;
 }
 
-std::tuple<std::vector<xarray<double>>, std::vector<xarray<double>>, xarray<double>>
+std::tuple<std::vector<xt::xarray<double>>, std::vector<xt::xarray<double>>, xt::xarray<double>>
 make_gradient_descent(
-    xarray<double> x_train, // shape (n, k_in)
-    xarray<double> y_train, // shape (n, k_out)
+    xt::xarray<double> x_train, // shape (n, k_in)
+    xt::xarray<double> y_train, // shape (n, k_out)
     int epochs,
     float learning_rate,
-    std::vector<int> neurons_per_layer) // list of neurons in each layer
-{
+    std::vector<int> neurons_per_layer, // list of neurons in each layer
+    std::optional<std::string> pretrained_model_path = std::nullopt // optional path
+) {
     int dataset_size = x_train.shape()[0];
     int input_size = x_train.shape()[1];
     int num_layers = neurons_per_layer.size();
     int batch_size = 10; // Define batch size
 
-    std::vector<xarray<double>> weights(num_layers);
-    std::vector<xarray<double>> biases(num_layers);
-    xarray<double> mse_array = xt::empty<double>({0});
+    std::vector<xt::xarray<double>> weights(num_layers);
+    std::vector<xt::xarray<double>> biases(num_layers);
+    xt::xarray<double> mse_array;
+    if (pretrained_model_path) {
+        // Load pretrained weights, biases, and MSE array
+        load_model(weights, biases, mse_array, *pretrained_model_path, num_layers);
+    } else {
+        // Initialize weights and biases
+        weights[0] = xt::random::randn<double>({neurons_per_layer[0], input_size});
+        biases[0] = xt::random::randn<double>({neurons_per_layer[0], 1});
 
-    weights[0] = xt::random::randn<double>({neurons_per_layer[0], input_size});
-    biases[0] = xt::random::randn<double>({neurons_per_layer[0], 1});
-    // print_shapes(weights[0], "weights_0");
-    // print_shapes(biases[0], "biases_0");
+        for (int l = 1; l < num_layers; l++) {
+            weights[l] = xt::random::randn<double>({neurons_per_layer[l], neurons_per_layer[l - 1]});
+            biases[l] = xt::random::randn<double>({neurons_per_layer[l], 1});
+        }
 
-
-    for (int l = 1; l < num_layers; l++) {
-        weights[l] = xt::random::randn<double>({neurons_per_layer[l], neurons_per_layer[l - 1]});
-        biases[l] = xt::random::randn<double>({neurons_per_layer[l], 1});
-        // print_shapes(weights[l], "weights_" + std::to_string(l));
-        // print_shapes(biases[l], "biases_" + std::to_string(l));
+        // Initialize mse_array as an empty array for new training
+        mse_array = xt::empty<double>({0});
     }
 
     for (int epoch = 0; epoch < epochs; epoch++) {

@@ -6,6 +6,7 @@
 #include <xtensor/xrandom.hpp>
 #include <xtensor/xadapt.hpp>
 #include <fstream>
+#include <sstream>
 using namespace xt::placeholders; // to enable _ syntax
 using namespace std;
 using namespace xt;
@@ -221,7 +222,7 @@ xarray<double> scale_data(xarray<double> x) {
 }
 
 // Function to save an xtensor xarray to a CSV file
-void save_xarray_to_csv(const xt::xarray<double>& array, const std::string& file_path) {
+void save_matrix_to_csv(const xt::xarray<double>& array, const std::string& file_path) {
     std::ofstream file(file_path);
     if (file.is_open()) {
         for (size_t i = 0; i < array.shape(0); ++i) {
@@ -239,11 +240,92 @@ void save_xarray_to_csv(const xt::xarray<double>& array, const std::string& file
     }
 }
 
+void save_unidim_array_to_csv(const xt::xarray<double>& array, const std::string& file_path) {
+    std::ofstream file(file_path);
+    if (file.is_open()) {
+        for (size_t i = 0; i < array.shape(0); ++i) {
+            file << array(i);
+            file << ",";  // Add comma between elements
+        }
+        file.close();
+    } else {
+        std::cerr << "Error opening file " << file_path << std::endl;
+    }
+}
+
 // Function to dump the vectors of weights and biases (for each layer)
 void dump_model(const std::vector<xt::xarray<double>>& weights, const std::vector<xt::xarray<double>>& biases, const xt::xarray<double>& mse_array, string dir_path) {
     for (size_t i = 0; i < weights.size(); ++i) {
-        save_xarray_to_csv(weights[i], dir_path + "/" + "weights_layer_" + std::to_string(i) + ".csv");
-        save_xarray_to_csv(biases[i], dir_path + "/" + "biases_layer_" + std::to_string(i) + ".csv");
+        save_matrix_to_csv(weights[i], dir_path + "/" + "weights_layer_" + std::to_string(i) + ".csv");
+        save_matrix_to_csv(biases[i], dir_path + "/" + "biases_layer_" + std::to_string(i) + ".csv");
     }
-    save_xarray_to_csv(mse_array, dir_path + "/" + "loss.csv");
+    save_unidim_array_to_csv(mse_array, dir_path + "/" + "loss.csv");
 }
+
+// Function to load an xtensor xarray from a CSV file
+// The result is a two dimensional array, i.e. a matrix
+xt::xarray<double> load_xarray_from_csv(const std::string& file_path) {
+    std::ifstream file(file_path);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file " << file_path << std::endl;
+        return xt::xarray<double>();
+    }
+
+    std::vector<std::vector<double>> data;
+    std::string line;
+    while (std::getline(file, line)) {
+        std::vector<double> row;
+        std::stringstream line_stream(line);
+        std::string cell;
+        while (std::getline(line_stream, cell, ',')) {
+            row.push_back(std::stod(cell));
+        }
+        data.push_back(row);
+    }
+    file.close();
+
+    // Convert vector of vectors to xtensor xarray
+    size_t rows = data.size();
+    size_t cols = data[0].size();
+    xt::xarray<double> array = xt::zeros<double>({rows, cols});
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < cols; ++j) {
+            array(i, j) = data[i][j];
+        }
+    }
+    return array;
+}
+
+// Function to load the model weights, biases, and mse array
+void load_model(std::vector<xt::xarray<double>>& weights, std::vector<xt::xarray<double>>& biases, xt::xarray<double>& mse_array, const std::string& dir_path, const int num_layers) {
+    size_t i = 0;
+    while (true) {
+        std::string weight_file = dir_path + "/" + "weights_layer_" + std::to_string(i) + ".csv";
+        std::string bias_file = dir_path + "/" + "biases_layer_" + std::to_string(i) + ".csv";
+
+        // Check if the weight and bias files exist
+        std::ifstream wfile(weight_file);
+        std::ifstream bfile(bias_file);
+        if (!wfile.is_open() || !bfile.is_open()) break;  // Stop when no more layers are found
+        
+        // Check if the number of layers in the model matches the expected architecture
+        if (i >= num_layers) {
+            std::cerr << "Error when loading pre-trained model. Check that the architecture specified in config.json "
+                      << "corresponds to the architecture of the selected pre-trained model." << std::endl;
+            std::exit(EXIT_FAILURE); // Exit the application with a failure status
+        }
+        
+        // Load weight and bias arrays
+        weights.push_back(load_xarray_from_csv(weight_file));
+        biases.push_back(load_xarray_from_csv(bias_file));
+        
+        wfile.close();
+        bfile.close();
+        ++i;
+    }
+
+    // Load the loss array (mse_array)
+    mse_array = load_xarray_from_csv(dir_path + "/" + "loss.csv");
+    mse_array.reshape({mse_array.size()}); // Force the array to be unidimensional
+}
+

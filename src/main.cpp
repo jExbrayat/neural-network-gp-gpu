@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
     float learning_rate = config["learning_rate"];
     std::string prediction_mode = config["prediction_mode"];
     std::vector<int> network_architecture = config["network_architecture"];
+    std::optional<std::string> pretrained_model_path = 
+        (config["pretrained_model_path"] != "") ? std::optional<std::string>(config["pretrained_model_path"]) : std::nullopt;
 
     // Use xtensor-io to load the CSV data into an xtensor xarray
     xt::xarray<double> x_train;
@@ -94,7 +96,7 @@ int main(int argc, char *argv[])
     x_test = scale_data(x_test);
     
     // Find good weights
-    std::tuple weights_biases = make_gradient_descent(x_train, x_train, epochs, learning_rate, network_architecture);
+    std::tuple weights_biases = make_gradient_descent(x_train, x_train, epochs, learning_rate, network_architecture, pretrained_model_path);
     auto [weights, biases, mse_array] = weights_biases;
 
 

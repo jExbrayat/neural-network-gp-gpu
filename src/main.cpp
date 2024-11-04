@@ -86,6 +86,9 @@ int main(int argc, char *argv[])
     int input_csv_cols = x_train.shape(1);
     int x_dataset_cols = input_csv_cols;
 
+    // Take subdataset
+    x_train = xt::view(x_train, xt::range(0, 100), xt::all());
+
     // Shuffle
     // TODO: does it work ?
     // shuffleArray(dataset);

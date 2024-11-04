@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
     std::vector<int> network_architecture = config["network_architecture"];
     std::optional<std::string> pretrained_model_path = 
         (config["pretrained_model_path"] != "") ? std::optional<std::string>(config["pretrained_model_path"]) : std::nullopt;
+    std::string model_save_path = config["model_save_path"];
 
     // Use xtensor-io to load the CSV data into an xtensor xarray
     xt::xarray<double> x_train;
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
     std::cout << "\nRMSE:\n";
     std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
 
-    dump_model(weights, biases, mse_array, "models/junk");
+    dump_model(weights, biases, mse_array, model_save_path);
 
     return 0;
 }

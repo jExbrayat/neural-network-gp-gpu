@@ -223,7 +223,7 @@ xarray<double> scale_data(xarray<double> x) {
 
 // Function to save an xtensor xarray to a CSV file
 void save_matrix_to_csv(const xt::xarray<double>& array, const std::string& file_path) {
-    std::ofstream file(file_path);
+    std::ofstream file(file_path); // If the file already exists, it will overwrite
     if (file.is_open()) {
         for (size_t i = 0; i < array.shape(0); ++i) {
             for (size_t j = 0; j < array.shape(1); ++j) {
@@ -314,10 +314,10 @@ void load_model(std::vector<xt::xarray<double>>& weights, std::vector<xt::xarray
                       << "corresponds to the architecture of the selected pre-trained model." << std::endl;
             std::exit(EXIT_FAILURE); // Exit the application with a failure status
         }
-        
+
         // Load weight and bias arrays
-        weights.push_back(load_xarray_from_csv(weight_file));
-        biases.push_back(load_xarray_from_csv(bias_file));
+        weights[i] = load_xarray_from_csv(weight_file);
+        biases[i] = load_xarray_from_csv(bias_file);
         
         wfile.close();
         bfile.close();

@@ -24,6 +24,7 @@ make_gradient_descent(
     xt::xarray<double> x_train, // shape (n, k_in)
     xt::xarray<double> y_train, // shape (n, k_out)
     int epochs,
+    int batch_size,
     float learning_rate,
     std::vector<int> neurons_per_layer, // list of neurons in each layer
     std::optional<std::string> pretrained_model_path = std::nullopt // optional path
@@ -31,7 +32,6 @@ make_gradient_descent(
     int dataset_size = x_train.shape()[0];
     int input_size = x_train.shape()[1];
     int num_layers = neurons_per_layer.size();
-    int batch_size = 10; // Define batch size
 
     std::vector<xt::xarray<double>> weights(num_layers);
     std::vector<xt::xarray<double>> biases(num_layers);
@@ -53,11 +53,16 @@ make_gradient_descent(
         mse_array = xt::empty<double>({0});
     }
 
+    int batch_number = (dataset_size / batch_size);
     for (int epoch = 0; epoch < epochs; epoch++) {
         cout << "Epoch: " << epoch << endl;
         float epoch_mse = 0;
 
+        int batch_id = 0; 
         for (int batch_start = 0; batch_start < dataset_size; batch_start += batch_size) {
+            cout << "   Batch: " << batch_id << " / " << batch_number << endl;
+            batch_id ++;
+
             int current_batch_size = std::min(batch_size, dataset_size - batch_start);
             auto x_batch = xt::view(x_train, range(batch_start, batch_start + current_batch_size), all());
             auto y_batch = xt::view(y_train, range(batch_start, batch_start + current_batch_size), all());

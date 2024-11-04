@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     // Parse the arguments from the JSON file
     std::string dataset_path = config["dataset_path"];
     int epochs = config["epochs"];
+    int batch_size = config["batch_size"];
     float learning_rate = config["learning_rate"];
     std::string prediction_mode = config["prediction_mode"];
     std::vector<int> network_architecture = config["network_architecture"];
@@ -88,16 +89,12 @@ int main(int argc, char *argv[])
     // Shuffle
     // TODO: does it work ?
     // shuffleArray(dataset);
-
-    // Take subdataset
-    x_train = xt::view(x_train, xt::range(0, 100), xt::all());
-    
     // Scale images to [0; 1]
     x_train = scale_data(x_train);
     x_test = scale_data(x_test);
     
     // Find good weights
-    std::tuple weights_biases = make_gradient_descent(x_train, x_train, epochs, learning_rate, network_architecture, pretrained_model_path);
+    std::tuple weights_biases = make_gradient_descent(x_train, x_train, epochs, batch_size, learning_rate, network_architecture, pretrained_model_path);
     auto [weights, biases, mse_array] = weights_biases;
 
 
@@ -107,6 +104,7 @@ int main(int argc, char *argv[])
 
     // Set input layer
     xarray<double> a = xt::view(x_test, i, xt::all());
+    auto a_original = a;
     a = a.reshape({x_dataset_cols, 1}); // Reshape to match input dimension
 
     // Forward propagation through all layers
@@ -119,7 +117,8 @@ int main(int argc, char *argv[])
 
     auto a_plotted = a.reshape({a.size()});
     gnuplot_loss_plot(mse_array, "Loss");
-    gnuplot_image_plot(a_plotted, "autoencoded img");
+    gnuplot_image_plot(a_original, "Original image");
+    gnuplot_image_plot(a_plotted, "Autoencoded image");
     cout << endl << " prediction shape " << a_plotted.shape(0) << "," << a.shape(1);
     std::cout << "\nRMSE:\n";
     std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;

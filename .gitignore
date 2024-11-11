@@ -10,3 +10,5 @@ build
 debug.cpp
 debug
 config.json
+
+*.json

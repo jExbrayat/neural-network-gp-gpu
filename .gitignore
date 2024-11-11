@@ -1,0 +1,12 @@
+.venv
+.vscode
+
+temp
+!temp/__init__
+
+build
+!build/__init__
+
+debug.cpp
+debug
+config.json

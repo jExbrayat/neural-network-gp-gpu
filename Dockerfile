@@ -23,8 +23,10 @@ RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bi
 # Set the work directory to the app folder
 WORKDIR /usr/src/app
 
+
+# Instead of the following, use docker volumes
 # Copy the project files into the container
-COPY . .
+# COPY . .
 
 # Build the project
-RUN g++ -I "." -I "/root/.local/share/mamba/include/" src/main.cpp -o build/main
+# RUN g++ -I "." -I "/root/.local/share/mamba/include/" src/main.cpp -o build/main

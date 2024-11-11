@@ -1,2 +1,0 @@
-- [ ] Check for shuffle_array function efficiency
-- [ ] Dump loss correctly instead of as many lines as rows

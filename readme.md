@@ -12,7 +12,7 @@ The program uses a json configuration file to specify the model's parameters and
 Run the program with the following command:
 
 ```bash
-model path/to/config.json
+build/main path/to/config.json
 ```
 
 ### Configuration File Format

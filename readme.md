@@ -39,7 +39,7 @@ If GnuPlot is not installed, the program will still run but without the ability 
 The compilation process is streamlined using Docker. Ensure you have Docker Engine installed.  
 If not, follow this [installation guide](https://docs.docker.com/engine/install/ubuntu/).
 
-1) Move to the project's root directory.  
+1) `cd` in the project's root directory.  
 2) Build the container with the Dockerfile:
 ```bash
 sudo docker build -t cuda_nn_project .

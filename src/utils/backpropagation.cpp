@@ -19,7 +19,7 @@ void print_shapes(xarray<double> array, string name) {
     cout << array.shape(0) << ", " << array.shape(1) << std::endl;
 }
 
-std::tuple<std::vector<xt::xarray<double>>, std::vector<xt::xarray<double>>, xt::xarray<double>>
+std::tuple<std::vector<xt::xarray<double>>, std::vector<xt::xarray<double>>, std::vector<double>>
 make_gradient_descent(
     xt::xarray<double> x_train, // shape (n, k_in)
     xt::xarray<double> y_train, // shape (n, k_out)
@@ -35,10 +35,10 @@ make_gradient_descent(
 
     std::vector<xt::xarray<double>> weights(num_layers);
     std::vector<xt::xarray<double>> biases(num_layers);
-    xt::xarray<double> mse_array;
+    std::vector<double> mse_vector;
     if (pretrained_model_path) {
         // Load pretrained weights, biases, and MSE array
-        load_model(weights, biases, mse_array, *pretrained_model_path, num_layers);
+        // load_model(weights, biases, mse_vector, *pretrained_model_path, num_layers);
     } else {
         // Initialize weights and biases
         weights[0] = xt::random::randn<double>({neurons_per_layer[0], input_size});
@@ -49,8 +49,7 @@ make_gradient_descent(
             biases[l] = xt::random::randn<double>({neurons_per_layer[l], 1});
         }
 
-        // Initialize mse_array as an empty array for new training
-        mse_array = xt::empty<double>({0});
+        // Initialize mse_vector as an empty vector for new training
     }
 
     int batch_number = (dataset_size / batch_size);
@@ -115,8 +114,8 @@ make_gradient_descent(
                 biases[l] -= learning_rate * gradient_b;
             }
         }
-        mse_array = xt::concatenate(xtuple(mse_array, xarray<double>({epoch_mse})));
+        cout << "MSE: " << epoch_mse << endl;
+        mse_vector.push_back(epoch_mse);
     }
-
-    return std::make_tuple(weights, biases, mse_array);
+    return std::make_tuple(weights, biases, mse_vector);
 }

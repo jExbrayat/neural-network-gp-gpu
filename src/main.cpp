@@ -119,14 +119,14 @@ int main(int argc, char *argv[])
     // a is the predicted value for the target value y_test[i]
 
     auto a_plotted = a.reshape({a.size()});
-    gnuplot_loss_plot(mse_array, "Loss");
+    // gnuplot_loss_plot(mse_list, "Loss");
     gnuplot_image_plot(a_original, "Original image");
     gnuplot_image_plot(a_plotted, "Autoencoded image");
     cout << endl << " prediction shape " << a_plotted.shape(0) << "," << a.shape(1);
     std::cout << "\nRMSE:\n";
-    std::cout << sqrt(mse_array(mse_array.size() - 1)) << endl;
+    std::cout << sqrt(mse_array[mse_array.size() - 1]) << endl;
 
-    dump_model(weights, biases, mse_array, model_save_path);
+    // dump_model(weights, biases, mse_array, model_save_path);
 
     return 0;
 }

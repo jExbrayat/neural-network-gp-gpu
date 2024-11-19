@@ -52,8 +52,8 @@ void Model::save_weights(const string &path) const
 {
     // Dump the weights and biases (for each layer)
     for (size_t l = 0; l < weights.size(); ++l) {
-        ofstream w_outfile(path + "/" + "weights_" + to_string(l));
-        ofstream b_outfile(path + "/" + "biases_" + to_string(l));
+        ofstream w_outfile(path + "/" + "weights_" + to_string(l) + ".csv");
+        ofstream b_outfile(path + "/" + "biases_" + to_string(l) + ".csv");
 
         xt::dump_csv(w_outfile, weights[l]);
         xt::dump_csv(b_outfile, biases[l]);
@@ -65,7 +65,12 @@ void Model::save_weights(const string &path) const
 
 void Model::save_loss(const string &path) const
 {
-    // Implement saving loss to a file
+    ofstream outfile(path + "/" + "loss.csv");
+    // Write each element of the vector to the file
+    for (const double &loss : loss_history) {
+        outfile << loss << "\n";
+    }
+    outfile.close();
 }
 
 xarray<double> Model::predict(const xarray<double> &x_test) const

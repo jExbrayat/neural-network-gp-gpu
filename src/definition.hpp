@@ -20,5 +20,6 @@ make_gradient_descent(
     std::vector<int> neurons_per_layer); // list of neurons in each layer
 xarray<uint8_t> transform_mnist_images(vector<vector<uint8_t>> x, std::array<size_t, 2> shape);
 xarray<int> transform_mnist_labels(vector<uint8_t> y, array<size_t, 2> shape);
+void print_shapes(xarray<double> array, string name);
 
 #endif // UTILS_HPP

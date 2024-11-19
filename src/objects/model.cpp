@@ -105,5 +105,5 @@ xarray<double> Model::predict(const xarray<double> &x_test) const
     {
         a = sigma(xt::linalg::dot(weights[l], a) + biases[l]);
     }
-    return a;
+    return xt::transpose(a);
 }

@@ -1,0 +1,4 @@
+- [ ] Rename sigma function sigmoid
+- [ ] Clean useless #include
+- [ ] Write good headers (hpp)
+- [ ] 

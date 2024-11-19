@@ -40,12 +40,38 @@ void Model::initialize_weights()
 
 void Model::load_weights(const string &path)
 {
-    // Implement loading weights from a file
+    for (size_t l = 0; l < weights.size(); ++l) {
+        ifstream w_infile(path + "/" + "weights_" + to_string(l) + ".csv");
+        ifstream b_infile(path + "/" + "biases_" + to_string(l) + ".csv");
+
+        weights[l] = xt::load_csv<double>(w_infile);
+        biases[l] = xt::load_csv<double>(b_infile);
+
+        w_infile.close();
+        b_infile.close();
+    }
 }
 
-void Model::load_loss(const string &path)
+void Model::load_loss(const string &loss_file_path)
 {
-    // Implement loading loss from a file
+    ifstream infile(loss_file_path);
+    
+    // Clear the current loss history to avoid appending
+    loss_history.clear();
+    
+    // Read each line from the file and add to the loss_history vector
+    string line;
+    while (getline(infile, line)) {
+        try {
+            // Convert line to double and push to vector
+            double loss = stod(line);
+            loss_history.push_back(loss);
+        } catch(const invalid_argument &e) {
+            cerr << "Error: Invalid value in file '" << loss_file_path << "' - " << line << endl;
+            continue;
+        }
+    }
+    infile.close();
 }
 
 void Model::save_weights(const string &path) const

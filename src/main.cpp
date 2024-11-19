@@ -5,8 +5,8 @@
 #include <nlohmann/json.hpp> // Include the nlohmann/json library
 #include "src/objects/model.cpp"
 #include "src/objects/gradient_descent.cpp"
-#include "src/utils/utils.cpp"
-#include "src/definition.hpp"
+#include "src/objects/autoencoder.cpp"
+#include "src/utils.cpp"
 
 using namespace std;
 using namespace xt;
@@ -15,19 +15,6 @@ void print_help(const string &program_name)
 {
     std::cout << "Usage: " << program_name << " config.json\n";
     std::cout << "Pass a config.json file containing parameters.\n";
-}
-
-nlohmann::json read_json(const string &config_file_path) {
-    std::ifstream file(config_file_path);
-    if (!file.is_open())
-    {
-        std::cerr << "Error: Could not open config.json file.\n";
-        return 1;
-    }
-    nlohmann::json config;
-    file >> config;
-    file.close();
-    return config;
 }
 
 int main(int argc, char *argv[]) {
@@ -55,20 +42,39 @@ int main(int argc, char *argv[]) {
 
     // Parse the arguments from the JSON file
     string dataset_path = config["dataset_path"];
+    vector<int> network_architecture = config["network_architecture"];
     unsigned int epochs = config["epochs"];
     int batch_size = config["batch_size"];
     float learning_rate = config["learning_rate"];
-    vector<int> network_architecture = config["network_architecture"];
     string model_save_path = config["model_save_path"];
+    string pretrained_model_path = config["pretrained_model_path"];
 
-    xt::xarray<double> dataset = load_xarray_from_csv(dataset_path);
-    xt::xarray<double> x = xt::view(dataset, xt::all(), xt::range(0, dataset.shape(1) - 1));
-    xt::xarray<double> y = xt::view(dataset, xt::all(), dataset.shape(1) - 1);
+    // Load dataset
+    ifstream infile(dataset_path);
+    xt::xarray<double> dataset = xt::load_csv<double>(infile);
+    infile.close();
 
-    Model nn(network_architecture, x.shape(1));
+    // Split x and y
+    // Autoencoding now
+    // TODO: make easy to switch between modes
+    xt::xarray<double> x = xt::view(dataset, xt::all(), xt::range(0, dataset.shape(1))); // - 1
+    xt::xarray<double> &y = x;
+    // xt::xarray<double> y = xt::view(dataset, xt::all(), dataset.shape(1) - 1);
 
-    nn.fit(x, y, epochs, batch_size, learning_rate);
+    // Scale data
+    scale_data(x);
+    scale_data(y);
+
+    // Load model
+    Autoencoder nn(network_architecture, x.shape(1));
+
+    // Train model
+    nn.fit(x, epochs, batch_size, learning_rate);
+    
+    // Predict dataset
     xt:xarray<double> y_pred = nn.predict(x);
+    
+    // Save y_pred
     std::ofstream out_file ("models/junk/junk.csv");
     xt::dump_csv(out_file, y_pred);
 

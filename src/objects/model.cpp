@@ -8,6 +8,7 @@
 #include <optional>
 #include "src/include/gradient_descent.hpp"
 #include "src/include/model.hpp"
+#include "src/definition.hpp"
 
 using namespace std;
 using namespace xt;
@@ -70,13 +71,12 @@ void Model::fit(const xarray<double> &x_train, const xarray<double> &y_train, co
     biases = gradientDescent.biases;
 }
 
-
-// xarray<double> Model::predict(const xarray<double> &x_test) const
-// {
-//     xarray<double> a = x_test;
-//     for (size_t l = 0; l < weights.size(); ++l)
-//     {
-//         a = sigmoid(xt::linalg::dot(weights[l], a) + biases[l]);
-//     }
-//     return a;
-// }
+xarray<double> Model::predict(const xarray<double> &x_test) const
+{
+    xarray<double> a = x_test;
+    for (size_t l = 0; l < weights.size(); ++l)
+    {
+        a = sigma(xt::linalg::dot(weights[l], a) + biases[l]);
+    }
+    return a;
+}

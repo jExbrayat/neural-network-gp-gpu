@@ -6,6 +6,7 @@
 #include <fstream>
 #include <optional>
 #include "src/definition.hpp"
+#include "src/include/gradient_descent.hpp"
 
 using namespace std;
 using namespace xt;

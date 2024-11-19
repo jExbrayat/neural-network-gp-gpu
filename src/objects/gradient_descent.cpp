@@ -3,10 +3,8 @@
 #include <xtensor-blas/xlinalg.hpp>
 #include <vector>
 #include <string>
-#include <fstream>
-#include <optional>
-#include "src/definition.hpp"
 #include "src/include/gradient_descent.hpp"
+#include "src/include/utils.hpp"
 
 using namespace std;
 using namespace xt;

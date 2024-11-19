@@ -76,7 +76,7 @@ void GradientDescent::train(const unsigned int &epochs, const int &batch_size, c
             xarray<double> y_batch = xt::view(y_train, range(batch_start, batch_start + current_batch_size), all());
 
             // Perform the forward pass
-            xarray<double> forward_pass(x_batch); // Modify the layer_activations and layer_outputs
+            forward_pass(x_batch); // Modify the layer_activations and layer_outputs
             xarray<double> &last_activation = layer_activations[num_layers];
 
             // Perform the backward pass

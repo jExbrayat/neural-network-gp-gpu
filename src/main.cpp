@@ -9,6 +9,8 @@
 #include "src/objects/model.cpp"
 #include "src/objects/gradient_descent.cpp"
 #include "src/utils/utils.cpp"
+#include "src/definition.hpp"
+
 using namespace std;
 using namespace xt;
 

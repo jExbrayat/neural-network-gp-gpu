@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include <optional>
+#include "src/include/gradient_descent.hpp"
 
 using namespace std;
 using namespace xt;
@@ -22,7 +23,7 @@ public:
     void load_loss(const string &path);
     void save_weights(const string &path) const;
     void save_loss(const string &path) const;
-    void fit(const xarray<double> &x_train, const xarray<double> &y_train, const int &epochs, const int &batch_size, const float &learning_rate);
+    void fit(const xarray<double> &x_train, const xarray<double> &y_train, const unsigned int &epochs, const int &batch_size, const float &learning_rate);
     xarray<double> predict(const xarray<double> &x_test) const;
 
 protected:
@@ -79,16 +80,20 @@ void Model::save_loss(const string &path) const
     // Implement saving loss to a file
 }
 
-// void Model::fit(const xarray<double> &x_train, const xarray<double> &y_train, const unsigned int &epochs, const unsigned int &batch_size, const float &learning_rate)
-// {
-//     TODO: use GradientDescent class
-//     for (int epoch = 0; epoch < epochs; ++epoch)
-//     {
-//         backpropagate(x_train, y_train, learning_rate);
-//         // Track and store loss for each epoch
-//         loss_history.push_back(0.0); // Placeholder, replace with actual loss calculation
-//     }
-// }
+void Model::fit(const xarray<double> &x_train, const xarray<double> &y_train, const unsigned int &epochs, const int &batch_size, const float &learning_rate)
+{
+    // Create an instance of GradientDescent
+    GradientDescent gradientDescent(x_train, y_train, weights, biases);
+    
+    // Train the model using the train method of GradientDescent
+    gradientDescent.train(epochs, batch_size, learning_rate);
+    
+    // Retrieve the results
+    loss_history = gradientDescent.loss_history;  // Store loss history from GradientDescent
+    weights = gradientDescent.weights;
+    biases = gradientDescent.biases;
+}
+
 
 // xarray<double> Model::predict(const xarray<double> &x_test) const
 // {

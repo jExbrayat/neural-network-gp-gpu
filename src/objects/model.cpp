@@ -73,7 +73,7 @@ void Model::fit(const xarray<double> &x_train, const xarray<double> &y_train, co
 
 xarray<double> Model::predict(const xarray<double> &x_test) const
 {
-    xarray<double> a = x_test;
+    xarray<double> a = xt::transpose(x_test);
     for (size_t l = 0; l < weights.size(); ++l)
     {
         a = sigma(xt::linalg::dot(weights[l], a) + biases[l]);

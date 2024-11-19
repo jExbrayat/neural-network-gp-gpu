@@ -7,6 +7,8 @@
 #include <xtensor/xcsv.hpp>
 #include <nlohmann/json.hpp> // Include the nlohmann/json library
 #include "src/objects/model.cpp"
+#include "src/objects/gradient_descent.cpp"
+#include "src/utils/utils.cpp"
 using namespace std;
 using namespace xt;
 

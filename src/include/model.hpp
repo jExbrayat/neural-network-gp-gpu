@@ -26,7 +26,6 @@ public:
     void load_loss(const string &path);
     void save_weights(const string &path) const;
     void save_loss(const string &path) const;
-    void fit(const xarray<double> &x_train, const xarray<double> &y_train, const unsigned int &epochs, const int &batch_size, const float &learning_rate);
     xarray<double> predict(const xarray<double> &x_test) const;
 
 protected:

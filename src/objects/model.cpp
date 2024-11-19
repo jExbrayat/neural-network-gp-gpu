@@ -2,6 +2,7 @@
 #include <xtensor/xarray.hpp>
 #include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xrandom.hpp>
+#include <xtensor/xcsv.hpp>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -49,7 +50,17 @@ void Model::load_loss(const string &path)
 
 void Model::save_weights(const string &path) const
 {
-    // Implement saving weights to a file
+    // Dump the weights and biases (for each layer)
+    for (size_t l = 0; l < weights.size(); ++l) {
+        ofstream w_outfile(path + "/" + "weights_" + to_string(l));
+        ofstream b_outfile(path + "/" + "biases_" + to_string(l));
+
+        xt::dump_csv(w_outfile, weights[l]);
+        xt::dump_csv(b_outfile, biases[l]);
+
+        w_outfile.close();
+        b_outfile.close();
+    }
 }
 
 void Model::save_loss(const string &path) const

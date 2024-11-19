@@ -17,6 +17,19 @@ void print_help(const string &program_name)
     std::cout << "Pass a config.json file containing parameters.\n";
 }
 
+nlohmann::json read_json(const string &config_file_path) {
+    std::ifstream file(config_file_path);
+    if (!file.is_open())
+    {
+        std::cerr << "Error: Could not open config.json file.\n";
+        return 1;
+    }
+    nlohmann::json config;
+    file >> config;
+    file.close();
+    return config;
+}
+
 int main(int argc, char *argv[]) {
 
     // Check if the --help argument is passed
@@ -26,6 +39,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    // Send error message
     if (argc < 2)
     {
         cerr << "Error: Missing config.json file path.\n";
@@ -34,17 +48,10 @@ int main(int argc, char *argv[]) {
     }
 
     // Parsed the config_file argument
-    string config_file = argv[1];
+    string config_file_path = argv[1];
 
     // Read the JSON file
-    std::ifstream file(config_file);
-    if (!file.is_open())
-    {
-        std::cerr << "Error: Could not open config.json file.\n";
-        return 1;
-    }
-    nlohmann::json config;
-    file >> config;
+    nlohmann::json config = read_json(config_file_path);
 
     // Parse the arguments from the JSON file
     string dataset_path = config["dataset_path"];

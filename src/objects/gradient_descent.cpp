@@ -5,37 +5,10 @@
 #include <string>
 #include <fstream>
 #include <optional>
-#include <src/definition.hpp>
+#include "src/definition.hpp"
 
 using namespace std;
 using namespace xt;
-
-class GradientDescent
-{
-public:
-    // Constructor
-    GradientDescent(const xarray<double> &x_train, const xarray<double> &y_train, vector<xarray<double>> &weights, vector<xarray<double>> &biases);
-    
-    // Method
-    void train(const unsigned int &epochs, const int &batch_size, const float &learning_rate);
-    
-protected:
-    vector<xarray<double>> weights; // Define vector of tensors for making operations on weights
-    vector<xarray<double>> biases;  // Define vector of tensors for making operations on biases
-    vector<double> loss_history; // Store the loss over epochs
-    xarray<double> x_train;
-    xarray<double> y_train;
-
-private:
-    // Method
-    void forward_pass(const xarray<double> &x_batch);
-    void backward_pass(const xarray<double> &y_batch, const int &current_batch_size, const float &learning_rate);
-
-    // Class members
-    int num_layers;
-    std::vector<xarray<double>> layer_outputs;
-    std::vector<xarray<double>> layer_activations;
-};
 
 // Define constructor
 // Just init class members

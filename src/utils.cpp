@@ -5,14 +5,14 @@
 using namespace std;
 using namespace xt;
 
-xarray<double> sigma(xarray<double> x)
+xarray<double> sigmoid(xarray<double> x)
 {
     return 1 / (1 + xt::exp(-x));
 }
 
-xarray<double> sigma_derivative(xarray<double> x)
+xarray<double> sigmoid_derivative(xarray<double> x)
 {
-    return sigma(x) * (1 - sigma(x));
+    return sigmoid(x) * (1 - sigmoid(x));
 }
 
 void print_shapes(xarray<double> &array, string msg) {

@@ -103,7 +103,7 @@ xarray<double> Model::predict(const xarray<double> &x_test) const
     xarray<double> a = xt::transpose(x_test);
     for (size_t l = 0; l < weights.size(); ++l)
     {
-        a = sigma(xt::linalg::dot(weights[l], a) + biases[l]);
+        a = sigmoid(xt::linalg::dot(weights[l], a) + biases[l]);
     }
     return xt::transpose(a);
 }

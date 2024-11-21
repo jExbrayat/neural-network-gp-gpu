@@ -26,7 +26,7 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
 
     for (int l = 0; l < num_layers; l++) {
         layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
-        layer_activations[l + 1] = sigma(layer_outputs[l]); // sigma is defined in src/utils/utils.cpp
+        layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in src/utils/utils.cpp
     }
 }
 
@@ -36,10 +36,10 @@ void GradientDescent::backward_pass(const xarray<double> &y_batch, const int &cu
 
     // Init delta vector corresponding to the last layer
     xarray<double> &last_activation = layer_activations[num_layers];
-    deltas[num_layers - 1] = (last_activation - xt::transpose(y_batch)) * sigma_derivative(layer_outputs[num_layers - 1]);
+    deltas[num_layers - 1] = (last_activation - xt::transpose(y_batch)) * sigmoid_derivative(layer_outputs[num_layers - 1]);
 
     for (int l = num_layers - 2; l >= 0; l--) {
-        deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigma_derivative(layer_outputs[l]);
+        deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigmoid_derivative(layer_outputs[l]);
     }
 
     // Update weights and biases

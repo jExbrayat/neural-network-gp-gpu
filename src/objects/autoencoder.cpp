@@ -18,7 +18,7 @@ void Autoencoder::fit(const xarray<double> &x_train, const unsigned int &epochs,
     loss_history.insert(loss_history.end(), gradientDescent.loss_history.begin(), gradientDescent.loss_history.end()); // Append the updated loss history
 }
 
-tuple<xarray<double>, xarray<double>, xarray<double>, xarray<double>> load_mnist_dataset() {
+tuple<xarray<double>, xarray<double>, xarray<double>, xarray<double>> Autoencoder::load_mnist_dataset() {
         auto dataset = mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>("datasets/autoencoding/mnist");    
         xarray<double> x_train = transform_mnist_images(dataset.training_images, {dataset.training_images.size(), 784}); // shape (N, 784)
         xarray<double> y_train = transform_mnist_labels(dataset.training_labels, {dataset.training_labels.size(), 1}); // shape (N, 1)

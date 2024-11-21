@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     // Load dataset
     xt::xarray<double> x_train, y_train, x_test, y_test;
     if (dataset_path == "mnist") {
-        auto [x_train, y_train, x_test, y_test] = Autoencoder::load_mnist_dataset();
+        std::tie(x_train, y_train, x_test, y_test) = Autoencoder::load_mnist_dataset(train_test_split);
 
     } else {
         ifstream infile(dataset_path);

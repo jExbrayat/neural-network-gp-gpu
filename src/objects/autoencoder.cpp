@@ -13,9 +13,9 @@ void Autoencoder::fit(const xarray<double> &x_train, const unsigned int &epochs,
     gradientDescent.train(epochs, batch_size, learning_rate);
     
     // Retrieve the results
-    loss_history = gradientDescent.loss_history;  // Store loss history from GradientDescent
     weights = gradientDescent.weights;
     biases = gradientDescent.biases;
+    loss_history.insert(loss_history.end(), gradientDescent.loss_history.begin(), gradientDescent.loss_history.end()); // Append the updated loss history
 }
 
 tuple<xarray<double>, xarray<double>, xarray<double>, xarray<double>> load_mnist_dataset() {

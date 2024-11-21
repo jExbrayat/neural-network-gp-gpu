@@ -51,9 +51,9 @@ void Model::load_weights(const string &path)
     }
 }
 
-void Model::load_loss(const string &loss_file_path)
+void Model::load_loss(const string &pretrained_model_path)
 {
-    ifstream infile(loss_file_path);
+    ifstream infile(pretrained_model_path + "/loss.csv");
     
     // Clear the current loss history to avoid appending
     loss_history.clear();

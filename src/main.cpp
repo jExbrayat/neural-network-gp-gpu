@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
     unsigned int epochs = config["epochs"];
     int batch_size = config["batch_size"];
     float learning_rate = config["learning_rate"];
+    float train_test_split = config["train_test_split"];
 
     // Load dataset
     xt::xarray<double> x_train, y_train, x_test, y_test;
@@ -57,7 +58,6 @@ int main(int argc, char *argv[]) {
         xt::xarray<double> dataset = xt::load_csv<double>(infile);
         infile.close();
 
-        float train_test_split = 0.8;
         int train_test_split_idx = round(train_test_split * dataset.shape(0));
         auto train_range = xt::range(0, train_test_split_idx);
         auto test_range = xt::range(train_test_split_idx, dataset.shape(0));

@@ -2,9 +2,11 @@
 #define AUTOENCODER_HPP
 
 #include "src/include/model.hpp"
-#include "iostream"
+#include <xtensor/xarray.hpp>
+#include <iostream>
 
 using namespace std;
+using namespace xt;
 
 class Autoencoder : public Model {
 public:
@@ -14,6 +16,7 @@ public:
 
     // Methods
     void fit(const xarray<double> &x_train, const unsigned int &epochs, const int &batch_size, const float &learning_rate);
+    tuple<xarray<double>, xarray<double>, xarray<double>, xarray<double>> load_mnist_dataset();
 };
 
 #endif

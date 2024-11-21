@@ -77,8 +77,12 @@ void Model::save_weights(const string &path) const
 {
     // Dump the weights and biases (for each layer)
     for (size_t l = 0; l < weights.size(); ++l) {
+        string w_filepath = path + "/" + "weights_" + to_string(l) + ".csv";
+        string b_filepath = path + "/" + "biases_" + to_string(l) + ".csv";
         ofstream w_outfile(path + "/" + "weights_" + to_string(l) + ".csv");
         ofstream b_outfile(path + "/" + "biases_" + to_string(l) + ".csv");
+        check_iostream_state(w_outfile, w_filepath);
+        check_iostream_state(b_outfile, b_filepath);
 
         xt::dump_csv(w_outfile, weights[l]);
         xt::dump_csv(b_outfile, biases[l]);

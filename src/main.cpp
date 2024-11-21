@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
 
     } else {
         ifstream infile(dataset_path);
+        check_iostream_state(infile, dataset_path);
         xt::xarray<double> dataset = xt::load_csv<double>(infile);
         infile.close();
 
@@ -93,8 +94,14 @@ int main(int argc, char *argv[]) {
     // Save trained weights and loss if desired
     if (!config["model_save_path"].is_null()) {
         string model_save_path = config["model_save_path"];
-        nn.save_weights(model_save_path);
-        nn.save_loss(model_save_path);
+        try {
+            nn.save_weights(model_save_path);
+            nn.save_loss(model_save_path);
+        } catch (const std::runtime_error& e) {
+            std::cout << "The program failed to save the model in " << model_save_path << ", saving in the current directory instead.";
+            nn.save_weights(".");
+            nn.save_loss(".");
+        }
     }
 
     // Predict test set and save result if desired

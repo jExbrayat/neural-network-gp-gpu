@@ -57,3 +57,9 @@ void scale_data(xarray<double> &x) {
     // Scale data in [0; 1]
     (x - xt::amin(x)()) / (xt::amax(x)() - xt::amin(x)());
 }
+
+void check_iostream_state(std::ios& iofile, const std::string& iofilepath) {
+    if (!iofile) {  // If the stream is in a bad state (i.e., failed to open)
+        throw std::runtime_error("Failed to open file: " + iofilepath);
+    }
+}

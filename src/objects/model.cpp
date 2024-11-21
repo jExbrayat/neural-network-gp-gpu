@@ -66,7 +66,7 @@ void Model::load_loss(const string &pretrained_model_path)
             double loss = stod(line);
             loss_history.push_back(loss);
         } catch(const invalid_argument &e) {
-            cerr << "Error: Invalid value in file '" << loss_file_path << "' - " << line << endl;
+            cerr << "Error: Invalid value in file '" << pretrained_model_path + "/loss.csv" << "' - " << line << endl;
             continue;
         }
     }

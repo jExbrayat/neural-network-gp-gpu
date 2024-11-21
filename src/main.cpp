@@ -46,8 +46,6 @@ int main(int argc, char *argv[]) {
     unsigned int epochs = config["epochs"];
     int batch_size = config["batch_size"];
     float learning_rate = config["learning_rate"];
-    string model_save_path = config["model_save_path"];
-    string pretrained_model_path = config["pretrained_model_path"];
 
     // Load dataset
     ifstream infile(dataset_path);
@@ -67,16 +65,36 @@ int main(int argc, char *argv[]) {
 
     // Load model
     Autoencoder nn(network_architecture, x.shape(1));
+    // Args are network architecture and input size of the data 
+
+    // Load pretrained weights if desired
+    if (config["pretrained_model_path"].is_null()) {
+        // Do nothing, randomly initialized weights will stay still
+    } else {
+        // Load pretrained weights and loss 
+        string pretrained_model_path = config["pretrained_model_path"];
+        nn.load_weights(pretrained_model_path);
+        nn.load_loss(pretrained_model_path);
+    }
 
     // Train model
     nn.fit(x, epochs, batch_size, learning_rate);
     
-    // Predict dataset
-    xt:xarray<double> y_pred = nn.predict(x);
-    
-    // Save y_pred
-    std::ofstream out_file ("models/junk/junk.csv");
-    xt::dump_csv(out_file, y_pred);
+    // Save trained weights and loss if desired
+    if (!config["model_save_path"].is_null()) {
+        string model_save_path = config["model_save_path"];
+        nn.save_weights(model_save_path);
+        nn.save_loss(model_save_path);
+    }
 
+    // Predict test set and save result if desired
+    if (!config["pred_save_path"].is_null()) {
+        // Predict
+        xt:xarray<double> y_pred = nn.predict(x);
+        // Save
+        string pred_save_path = config["pred_save_path"];
+        std::ofstream out_file (pred_save_path);
+        xt::dump_csv(out_file, y_pred);
+    }
     return 0;
 }

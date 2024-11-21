@@ -85,7 +85,7 @@ void GradientDescent::train(const unsigned int &epochs, const int &batch_size, c
             xarray<double> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
             epoch_mse += xt::sum(observation_mse)() / dataset_size;
         }
-        cout << "Epoch " << epoch << " MSE: " << epoch_mse << endl;
+        cout << "   MSE: " << epoch_mse << endl;
         loss_history.push_back(epoch_mse);
     }
 }

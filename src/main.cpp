@@ -48,23 +48,33 @@ int main(int argc, char *argv[]) {
     float learning_rate = config["learning_rate"];
 
     // Load dataset
-    ifstream infile(dataset_path);
-    xt::xarray<double> dataset = xt::load_csv<double>(infile);
-    infile.close();
+    xt::xarray<double> x_train, y_train, x_test, y_test;
+    if (dataset_path == "mnist") {
+        auto [x_train, y_train, x_test, y_test] = Autoencoder::load_mnist_dataset();
 
-    // Split x and y
-    // Autoencoding now
-    // TODO: make easy to switch between modes
-    xt::xarray<double> x = xt::view(dataset, xt::all(), xt::range(0, dataset.shape(1))); // - 1
-    xt::xarray<double> &y = x;
-    // xt::xarray<double> y = xt::view(dataset, xt::all(), dataset.shape(1) - 1);
+    } else {
+        ifstream infile(dataset_path);
+        xt::xarray<double> dataset = xt::load_csv<double>(infile);
+        infile.close();
 
+        float train_test_split = 0.8;
+        int train_test_split_idx = round(train_test_split * dataset.shape(0));
+        auto train_range = xt::range(0, train_test_split_idx);
+        auto test_range = xt::range(train_test_split_idx, dataset.shape(0));
+        x_train = xt::view(dataset, train_range, xt::range(0, dataset.shape(1))); // - 1
+        y_train = xt::view(dataset, train_range, dataset.shape(1) - 1);
+        x_test = xt::view(dataset, test_range, xt::range(0, dataset.shape(1))); // - 1
+        y_test = xt::view(dataset, test_range, dataset.shape(1) - 1);
+    }
+    
     // Scale data
-    scale_data(x);
-    scale_data(y);
+    scale_data(x_train);
+    scale_data(y_train);
+    scale_data(x_test);
+    scale_data(y_test);
 
     // Load model
-    Autoencoder nn(network_architecture, x.shape(1));
+    Autoencoder nn(network_architecture, x_train.shape(1));
     // Args are network architecture and input size of the data 
 
     // Load pretrained weights if desired
@@ -78,7 +88,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Train model
-    nn.fit(x, epochs, batch_size, learning_rate);
+    nn.fit(x_train, epochs, batch_size, learning_rate);
     
     // Save trained weights and loss if desired
     if (!config["model_save_path"].is_null()) {
@@ -90,7 +100,7 @@ int main(int argc, char *argv[]) {
     // Predict test set and save result if desired
     if (!config["pred_save_path"].is_null()) {
         // Predict
-        xt:xarray<double> y_pred = nn.predict(x);
+        xt:xarray<double> y_pred = nn.predict(x_train);
         // Save
         string pred_save_path = config["pred_save_path"];
         std::ofstream out_file (pred_save_path);

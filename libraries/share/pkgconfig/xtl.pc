@@ -1,0 +1,7 @@
+prefix=/user/3/exbrayaj/Desktop/cpp_neural_network/xtl_source
+includedir=${prefix}/include
+
+Name: xtl
+Description: Basic tools (containers, algorithms) used by other quantstack packages.
+Version: 0.7.7
+Cflags: -I${includedir}

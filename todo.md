@@ -1,0 +1,6 @@
+- [x] Rename sigma function sigmoid
+- [x] Clean useless #include
+- [ ] Write good headers (hpp)
+- [ ] Install code formater
+- [ ] Install libraries sorting tool
+- [ ] Check memory leaks

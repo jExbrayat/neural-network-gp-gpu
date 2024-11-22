@@ -24,7 +24,7 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
 
     layer_activations[0] = xt::transpose(x_batch);
 
-    for (int l = 0; l < num_layers; l++) {
+    for (size_t l = 0; l < num_layers; l++) {
         layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
         layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in src/utils/utils.cpp
     }

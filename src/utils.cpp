@@ -1,5 +1,6 @@
 #include <iostream>
 #include <xtensor/xarray.hpp>
+#include <xtensor/xmath.hpp>
 #include <nlohmann/json.hpp>
 #include <xtensor/xadapt.hpp>
 using namespace std;
@@ -55,7 +56,7 @@ xarray<uint8_t> transform_mnist_images(vector<vector<uint8_t>> &x, std::array<si
 
 void scale_data(xarray<double> &x) {
     // Scale data in [0; 1]
-    (x - xt::amin(x)()) / (xt::amax(x)() - xt::amin(x)());
+    x = (x - xt::amin(x)()) / (xt::amax(x)() - xt::amin(x)());
 }
 
 void check_iostream_state(std::ios& iofile, const std::string& iofilepath) {

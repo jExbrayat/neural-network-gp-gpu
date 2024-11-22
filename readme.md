@@ -19,13 +19,15 @@ build/main path/to/config.json
 
 The configuration file should be in JSON format with the following parameters:
 
-- **`"dataset_path"`**: Path to the training dataset.
-- **`"epochs"`**: Number of training epochs.
-- **`"batch_size"`**: Size of each batch for training.
-- **`"learning_rate"`**: Learning rate for the optimizer.
-- **`"network_architecture"`**: List representing the number of neurons per layer. For example, `[4, 8, 1]` specifies an architecture with two hidden layers and a single output neuron.
-- **`"pretrained_model_path"`**: (Optional) Path to a pretrained model to load initial weights and loss values, allowing continuation of training.
-- **`"model_save_path"`**: Path to save the trained model weights and loss data. *Note:* Ensure the directory exists before running the program, as it does not currently create missing directories.
+- **`"dataset_path"`** *string*: Path to the training dataset.
+- **`"epochs"`** *int*: Number of training epochs.
+- **`"train_test_split"`** *float*: Proportion of the dataset to be dedicated for training e.g. 0.8.
+- **`"batch_size"`** *int*: Size of each batch for training.
+- **`"learning_rate"`** *float*: Learning rate for the optimizer.
+- **`"network_architecture"`** *list<int>*: List representing the number of neurons per layer. For example, `[4, 8, 1]` specifies an architecture with two hidden layers and a single output neuron.
+- **`"pretrained_model_path"`** *string | null*: Path to a pretrained model to load initial weights and loss values, allowing continuation of training.
+- **`"model_save_path"`** *string | null*: Path to save the trained model weights and loss data. *Note:* Ensure the directory exists before running the program, as it does not currently create missing directories.
+- **`"pred_save_path"`** *string*: Path to save predictions for the test set.
 
 ## User Guide
 
@@ -36,6 +38,17 @@ If GnuPlot is not installed, the program will still run but without the ability 
 
 ### Compiling the Project
 
+#### With project-included libraries
+
+The program is thought to be compiled without Docker in case of admin rights restrictions.
+
+1) `cd` in the project's root directory.  
+2) Build the program by including the header only libraries:
+```bash
+g++ -I "libraries/include" -I "." src/main.cpp -o build/main
+```
+
+#### With Docker
 The compilation process is streamlined using Docker. Ensure you have Docker Engine installed.  
 If not, follow this [installation guide](https://docs.docker.com/engine/install/ubuntu/).
 

@@ -1,0 +1,7 @@
+prefix=/user/3/exbrayaj/Desktop/cpp_neural_network/xtl_source
+includedir=${prefix}/include
+
+Name: xtensor
+Description: xtensor is a C++ library meant for numerical analysis with multi-dimensional array expressions.
+Version: 0.25.0
+Cflags: -I${includedir}

@@ -45,7 +45,7 @@ The program is thought to be compiled without Docker in case of admin rights res
 1) `cd` in the project's root directory.  
 2) Build the program by including the header only libraries:
 ```bash
-g++ -I "libraries/include" -I "." src/main.cpp -o build/main
+g++ -std=c++17 -I "libraries/include" -I "." src/main.cpp -o build/main
 ```
 
 #### With Docker

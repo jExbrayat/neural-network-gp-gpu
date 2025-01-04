@@ -1,0 +1,11 @@
+{
+    "dataset_path": "mnist",
+    "train_test_split": 0.001,
+    "network_architecture": [128, 64, 784],
+    "epochs": 0,
+    "batch_size": 32,
+    "learning_rate": 0.1,
+    "model_save_path": "my-bad-bro",
+    "pretrained_model_path": "models/mnist_autoencoder",
+    "pred_save_path": "temp/junk_pred.csv"
+}

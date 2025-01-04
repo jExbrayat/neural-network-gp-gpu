@@ -1,92 +1,134 @@
 #include <iostream>
-#include <xtensor/xarray.hpp>
-#include <xtensor-blas/xlinalg.hpp>
 #include <vector>
-#include <string>
-#include "src/include/gradient_descent.hpp"
-#include "src/include/utils.hpp"
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+#include <cmath>
 
 using namespace std;
-using namespace xt;
 
-// Define constructor
-// Just init class members
-GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<double> &y_train, vector<xarray<double>> &weights, vector<xarray<double>> &biases) : x_train(x_train), y_train(y_train), weights(weights), biases(biases) {
-    num_layers = weights.size(); 
-    layer_outputs.resize(num_layers);
-    layer_activations.resize(num_layers + 1);
-}
-
-
-// Write gradient descent methods
-
-void GradientDescent::forward_pass(const xarray<double> &x_batch) {
-
-    layer_activations[0] = xt::transpose(x_batch);
-
-    for (size_t l = 0; l < num_layers; l++) {
-        layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
-        layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in src/utils/utils.cpp
+// CUDA kernels
+__global__ void sigmoidKernel(double* input, double* output, int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = 1.0 / (1.0 + exp(-input[idx]));
     }
 }
 
-void GradientDescent::backward_pass(const xarray<double> &y_batch, const int &current_batch_size, const float &learning_rate) {
-    
-    vector<xarray<double>> deltas(num_layers);
-
-    // Init delta vector corresponding to the last layer
-    xarray<double> &last_activation = layer_activations[num_layers];
-    deltas[num_layers - 1] = (last_activation - xt::transpose(y_batch)) * sigmoid_derivative(layer_outputs[num_layers - 1]);
-
-    for (int l = num_layers - 2; l >= 0; l--) {
-        deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigmoid_derivative(layer_outputs[l]);
-    }
-
-    // Update weights and biases
-    for (int l = 0; l < num_layers; l++) {
-        xarray<double> gradient_w = xt::linalg::dot(deltas[l], xt::transpose(layer_activations[l])) / current_batch_size; // Batch size may vary, at the end of epoch
-        xarray<double> gradient_b = xt::mean(deltas[l], {1});
-        gradient_b = gradient_b.reshape({gradient_b.size(), 1});
-
-        weights[l] -= learning_rate * gradient_w;
-        biases[l] -= learning_rate * gradient_b;
+__global__ void sigmoidDerivativeKernel(double* input, double* output, int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        double sigmoid_val = 1.0 / (1.0 + exp(-input[idx]));
+        output[idx] = sigmoid_val * (1.0 - sigmoid_val);
     }
 }
 
-void GradientDescent::train(const unsigned int &epochs, const int &batch_size, const float &learning_rate) {
-    int dataset_size = x_train.shape()[0];
-    int batch_number = (dataset_size / batch_size);
+void gpuMatrixMultiply(cublasHandle_t handle, double* d_A, double* d_B, double* d_C, int m, int n, int k) {
+    const double alpha = 1.0;
+    const double beta = 0.0;
+    cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, m, k, &alpha, d_B, n, d_A, k, &beta, d_C, n);
+}
 
-    for (unsigned int epoch = 0; epoch < epochs; epoch++) {
+class GradientDescent {
+private:
+    double* d_x_train;
+    double* d_y_train;
+    vector<double*> weights; 
+    vector<double*> biases;  
+    vector<double*> layer_outputs;
+    vector<double*> layer_activations;
 
-        cout << "Epoch: " << epoch << endl;
-        float epoch_mse = 0;
-        int batch_id = 0;
+    int num_layers;
+    int dataset_size;
+    cublasHandle_t handle;
 
-        for (int batch_start = 0; batch_start < dataset_size; batch_start += batch_size) {
-            // Plot currently processed batch number and increment
-            cout << "   Batch: " << batch_id << " / " << batch_number << endl;
-            batch_id++;
+public:
+    GradientDescent(const double* h_x_train, const double* h_y_train, int dataset_size,
+                    vector<vector<double>>& h_weights, vector<vector<double>>& h_biases)
+        : dataset_size(dataset_size) {
+        cublasCreate(&handle);
 
-            // Compute the current batch size, as defined normally but smaller if at the end of epoch
-            int current_batch_size = std::min(batch_size, dataset_size - batch_start);
-            xarray<double> x_batch = xt::view(x_train, range(batch_start, batch_start + current_batch_size), all());
-            xarray<double> y_batch = xt::view(y_train, range(batch_start, batch_start + current_batch_size), all());
+        cudaMalloc(&d_x_train, dataset_size * sizeof(double));
+        cudaMalloc(&d_y_train, dataset_size * sizeof(double));
+        cudaMemcpy(d_x_train, h_x_train, dataset_size * sizeof(double), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_y_train, h_y_train, dataset_size * sizeof(double), cudaMemcpyHostToDevice);
 
-            // Perform the forward pass
-            forward_pass(x_batch); // Modify the layer_activations and layer_outputs
-            xarray<double> &last_activation = layer_activations[num_layers];
+        num_layers = h_weights.size();
+        for (int l = 0; l < num_layers; ++l) {
+            double* d_weight;
+            double* d_bias;
 
-            // Perform the backward pass
-            backward_pass(y_batch,  current_batch_size, learning_rate); // Modify the weights and biases
- 
-            // Compute the loss for the current batch
-            xarray<double> squared_error = xt::pow(last_activation - xt::transpose(y_batch), 2); // Error for each pixel of each observation
-            xarray<double> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
-            epoch_mse += xt::sum(observation_mse)() / dataset_size;
+            cudaMalloc(&d_weight, h_weights[l].size() * sizeof(double));
+            cudaMalloc(&d_bias, h_biases[l].size() * sizeof(double));
+
+            cudaMemcpy(d_weight, h_weights[l].data(), h_weights[l].size() * sizeof(double), cudaMemcpyHostToDevice);
+            cudaMemcpy(d_bias, h_biases[l].data(), h_biases[l].size() * sizeof(double), cudaMemcpyHostToDevice);
+
+            weights.push_back(d_weight);
+            biases.push_back(d_bias);
         }
-        cout << "   MSE: " << epoch_mse << endl;
-        loss_history.push_back(epoch_mse);
     }
-}
 
+    void forward_pass(const double* d_x_batch) {
+        layer_activations.resize(num_layers + 1);
+        layer_outputs.resize(num_layers);
+
+        layer_activations[0] = const_cast<double*>(d_x_batch);
+
+        for (int l = 0; l < num_layers; ++l) {
+            int m = 1, n = 1, k = 1; 
+            cudaMalloc(&layer_outputs[l], m * n * sizeof(double));
+            gpuMatrixMultiply(handle, weights[l], layer_activations[l], layer_outputs[l], m, n, k);
+
+            dim3 blockSize(256);
+            dim3 gridSize((m * n + blockSize.x - 1) / blockSize.x);
+            cudaMalloc(&layer_activations[l + 1], m * n * sizeof(double));
+            sigmoidKernel<<<gridSize, blockSize>>>(layer_outputs[l], layer_activations[l + 1], m * n);
+        }
+    }
+
+    void backward_pass(const double* d_y_batch, const int& current_batch_size, const float& learning_rate) {
+        vector<double*> deltas(num_layers);
+
+        int size = current_batch_size;
+
+        cudaMalloc(&deltas[num_layers - 1], size * sizeof(double));
+        sigmoidDerivativeKernel<<<(size + 255) / 256, 256>>>(layer_outputs[num_layers - 1], deltas[num_layers - 1], size);
+
+        for (int l = num_layers - 2; l >= 0; --l) {
+            cudaMalloc(&deltas[l], size * sizeof(double));
+            sigmoidDerivativeKernel<<<(size + 255) / 256, 256>>>(layer_outputs[l], deltas[l], size);
+        }
+
+        for (int l = 0; l < num_layers; ++l) {
+            gpuMatrixMultiply(handle, deltas[l], layer_activations[l], weights[l], size, size, size);
+        }
+    }
+
+    void train(const unsigned int& epochs, const int& batch_size, const float& learning_rate) {
+        int batch_number = dataset_size / batch_size;
+
+        for (unsigned int epoch = 0; epoch < epochs; ++epoch) {
+            cout << "Epoch: " << epoch << endl;
+
+            for (int batch_start = 0; batch_start < dataset_size; batch_start += batch_size) {
+                int current_batch_size = min(batch_size, dataset_size - batch_start);
+
+                const double* d_x_batch = d_x_train + batch_start;
+                const double* d_y_batch = d_y_train + batch_start;
+
+                forward_pass(d_x_batch);
+                backward_pass(d_y_batch, current_batch_size, learning_rate);
+            }
+        }
+    }
+
+    ~GradientDescent() {
+        cudaFree(d_x_train);
+        cudaFree(d_y_train);
+        for (int l = 0; l < num_layers; ++l) {
+            cudaFree(weights[l]);
+            cudaFree(biases[l]);
+        }
+        cublasDestroy(handle);
+    }
+};

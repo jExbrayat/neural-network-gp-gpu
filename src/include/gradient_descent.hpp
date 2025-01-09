@@ -8,9 +8,13 @@
 #include <string>
 #include <fstream>
 #include <optional>
+#include <cublas_v2.h>
 
 using namespace std;
 using namespace xt;
+
+__global__ void sigmoidKernel(double* input, double* output, int size);
+__global__ void sigmoidDerivativeKernel(double* input, double* output, int size);
 
 class GradientDescent
 {
@@ -40,6 +44,7 @@ private:
     int num_layers;                   // Number of layers in the network
     vector<xarray<double>> layer_outputs;   // Layer outputs (linear activations)
     vector<xarray<double>> layer_activations;   // Layer activations after applying activation function
+    cublasHandle_t handle;
 };
 
 #endif // GRADIENT_DESCENT_HPP

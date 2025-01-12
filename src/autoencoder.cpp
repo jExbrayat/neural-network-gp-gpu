@@ -1,6 +1,7 @@
-#include "src/include/autoencoder.hpp"
+#include "autoencoder.hpp"
 #include <iostream>
-#include "src/include/mnist_reader.hpp"
+#include "mnist_reader.hpp"
+#include "utils.hpp"
 
 using namespace std;
 

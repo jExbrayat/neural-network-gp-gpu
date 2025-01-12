@@ -3,10 +3,10 @@
 #include <xtensor/xview.hpp>
 #include <xtensor/xcsv.hpp>
 #include <nlohmann/json.hpp> // Include the nlohmann/json library
-#include "src/objects/model.cpp"
-#include "src/objects/gradient_descent.cpp"
-#include "src/objects/autoencoder.cpp"
-#include "src/utils.cpp"
+#include "model.hpp"
+#include "gradient_descent.hpp"
+#include "autoencoder.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace xt;

@@ -3,8 +3,8 @@
 #include <xtensor-blas/xlinalg.hpp>
 #include <vector>
 #include <string>
-#include "src/include/gradient_descent.hpp"
-#include "src/include/utils.hpp"
+#include "gradient_descent.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace xt;
@@ -26,7 +26,7 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
 
     for (size_t l = 0; l < num_layers; l++) {
         layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
-        layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in src/utils/utils.cpp
+        layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in utils/utils.cpp
     }
 }
 

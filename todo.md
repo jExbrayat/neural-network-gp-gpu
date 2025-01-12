@@ -4,3 +4,5 @@
 - [ ] Install code formater
 - [ ] Install libraries sorting tool
 - [ ] Check memory leaks
+- [ ] Do not include .cpp files
+- [ ] Overcharge the fit() method in Autoencoder instead of defining it

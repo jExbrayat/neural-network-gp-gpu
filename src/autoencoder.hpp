@@ -1,7 +1,7 @@
 #ifndef AUTOENCODER_HPP
 #define AUTOENCODER_HPP
 
-#include "src/include/model.hpp"
+#include "model.hpp"
 #include <xtensor/xarray.hpp>
 #include <iostream>
 

@@ -6,9 +6,9 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include "src/include/gradient_descent.hpp"
-#include "src/include/model.hpp"
-#include "src/include/utils.hpp"
+#include "gradient_descent.hpp"
+#include "model.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace xt;

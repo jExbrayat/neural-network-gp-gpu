@@ -9,7 +9,7 @@
 #include <string>
 #include <fstream>
 #include <optional>
-#include "src/include/gradient_descent.hpp"
+#include "gradient_descent.hpp"
 
 using namespace std;
 using namespace xt;

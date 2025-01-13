@@ -3,10 +3,9 @@
 #include <xtensor-blas/xlinalg.hpp>
 #include <vector>
 #include <string>
-#include "gradient_descent.hpp"
+#include "gradient_descent.cuh"
 #include "utils.hpp"
 #include "cuda_utils.cuh"
-#include <cublas_v2.h>
 
 using namespace std;
 using namespace xt;
@@ -30,53 +29,53 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
     ArrayHandler XBATCH_T;
     XBATCH_T.cast_xtarray(layer_activations[0]);
     
-    // Allocate cuda memory
-    vector<CudaMatrixMemory> cuda_l_o;
-    vector<CudaMatrixMemory> cuda_l_a;
+    // // Allocate cuda memory
+    // vector<CudaMatrixMemory> cuda_l_o;
+    // vector<CudaMatrixMemory> cuda_l_a;
     
-    // Init the first layer activation
-    CudaMatrixMemory init_l_a(XBATCH_T.rows, XBATCH_T.cols);
-    init_l_a.sendMatrix2Device(XBATCH_T.carray);
-    cuda_l_a.push_back(init_l_a);
+    // // Init the first layer activation
+    // CudaMatrixMemory init_l_a(XBATCH_T.rows, XBATCH_T.cols);
+    // init_l_a.sendMatrix2Device(XBATCH_T.carray);
+    // cuda_l_a.push_back(init_l_a);
 
-    // Initialize cuBLAS
-    cublasHandle_t handle;
-    cublasCreate(&handle);
+    // // Initialize cuBLAS
+    // cublasHandle_t handle;
+    // cublasCreate(&handle);
     
-    // Allocate iteratively
-    for (size_t l = 0; l < num_layers; l++) {
-        // Cast xtarrays
-        ArrayHandler WEIGHTS;
-        ArrayHandler BIASES;
-        WEIGHTS.cast_xtarray(weights[l]);
-        BIASES.cast_xtarray(biases[l]);
+    // // Allocate iteratively
+    // for (size_t l = 0; l < num_layers; l++) {
+    //     // Cast xtarrays
+    //     ArrayHandler WEIGHTS;
+    //     ArrayHandler BIASES;
+    //     WEIGHTS.cast_xtarray(weights[l]);
+    //     BIASES.cast_xtarray(biases[l]);
 
-        // Send matrices in cuda
-        CudaMatrixMemory cuda_w(WEIGHTS.rows, WEIGHTS.cols);
-        CudaMatrixMemory cuda_b(BIASES.rows, BIASES.cols);
-        cuda_w.sendMatrix2Device(WEIGHTS.carray);
-        cuda_b.sendMatrix2Device(BIASES.carray);
+    //     // Send matrices in cuda
+    //     CudaMatrixMemory cuda_w(WEIGHTS.rows, WEIGHTS.cols);
+    //     CudaMatrixMemory cuda_b(BIASES.rows, BIASES.cols);
+    //     cuda_w.sendMatrix2Device(WEIGHTS.carray);
+    //     cuda_b.sendMatrix2Device(BIASES.carray);
 
-        // Perform operation with cuBLAS
-        float alpha = 1.0f;
-        float beta = 0.f;
-        int M = WEIGHTS.rows;
-        int K = WEIGHTS.cols;
-        int N = cuda_l_a[l].cols;
-        // Allocate memory for result
-        CudaMatrixMemory result(M, N);
-        cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, &alpha, cuda_w.device_ptr, K, cuda_l_a[l].device_ptr, N, &beta, result.device_ptr, N);
-        cublasSgeam(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, &alpha, result.device_ptr, N, &beta, cuda_b.device_ptr, N, result.device_ptr, N);
-        // Allocate memory for activated result
-        CudaMatrixMemory activated_result(M, N);
-        CudaKernel activateLayer;
-        activateLayer.setKernelFunction(sigmoidKernel);
-        activateLayer.setKernelGrid(16, 16, M, N);
-        activateLayer.runKernel(result.device_ptr, activated_result.device_ptr, M, N);
+    //     // Perform operation with cuBLAS
+    //     float alpha = 1.0f;
+    //     float beta = 0.f;
+    //     int M = WEIGHTS.rows;
+    //     int K = WEIGHTS.cols;
+    //     int N = cuda_l_a[l].cols;
+    //     // Allocate memory for result
+    //     CudaMatrixMemory result(M, N);
+    //     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, &alpha, cuda_w.device_ptr, K, cuda_l_a[l].device_ptr, N, &beta, result.device_ptr, N);
+    //     cublasSgeam(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, &alpha, result.device_ptr, N, &beta, cuda_b.device_ptr, N, result.device_ptr, N);
+    //     // Allocate memory for activated result
+    //     CudaMatrixMemory activated_result(M, N);
+    //     CudaKernel activateLayer;
+    //     activateLayer.setKernelFunction(sigmoidKernel);
+    //     activateLayer.setKernelGrid(16, 16, M, N);
+    //     activateLayer.runKernel(result.device_ptr, activated_result.device_ptr, M, N);
                 
-        cuda_l_o.push_back(result);
-        cuda_l_a.push_back(activated_result);
-    } 
+    //     cuda_l_o.push_back(result);
+    //     cuda_l_a.push_back(activated_result);
+    // } 
 
     for (size_t l = 0; l < num_layers; l++) {
         layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];

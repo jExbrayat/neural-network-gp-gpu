@@ -1,5 +1,5 @@
-#ifndef GRADIENT_DESCENT_HPP
-#define GRADIENT_DESCENT_HPP
+#ifndef GRADIENT_DESCENT_CUH
+#define GRADIENT_DESCENT_CUH
 
 #include <iostream>
 #include <xtensor/xarray.hpp>
@@ -42,4 +42,4 @@ private:
     vector<xarray<double>> layer_activations;   // Layer activations after applying activation function
 };
 
-#endif // GRADIENT_DESCENT_HPP
+#endif // GRADIENT_DESCENT_CUH

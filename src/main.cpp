@@ -4,7 +4,7 @@
 #include <xtensor/xcsv.hpp>
 #include <nlohmann/json.hpp> // Include the nlohmann/json library
 #include "model.hpp"
-#include "gradient_descent.hpp"
+#include "gradient_descent.cuh"
 #include "autoencoder.hpp"
 #include "utils.hpp"
 

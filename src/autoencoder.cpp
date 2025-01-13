@@ -2,6 +2,7 @@
 #include <iostream>
 #include "mnist_reader.hpp"
 #include "utils.hpp"
+#include "gradient_descent.cuh"
 
 using namespace std;
 

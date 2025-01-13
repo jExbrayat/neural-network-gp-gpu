@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include "gradient_descent.hpp"
+#include "gradient_descent.cuh"
 #include "model.hpp"
 #include "utils.hpp"
 

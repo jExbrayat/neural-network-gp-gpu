@@ -38,6 +38,4 @@ public:
     dim3 grid;
 };
 
-__global__ void sigmoidKernel(const float* input, float* output, const int rows, const int cols);
-
 #endif

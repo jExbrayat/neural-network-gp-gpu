@@ -23,17 +23,3 @@ void CudaGrid::setKernelGrid(const int blocksize_x, const int blocksize_y, const
     threads = dim3(blocksize_x, blocksize_y);
     grid = dim3((cols + blocksize_x - 1) / blocksize_x, (rows + blocksize_y - 1) / blocksize_y);
 }
-
-
-__global__ void sigmoidKernel(const float* input, float* output, const int rows, const int cols) {
-    // Compute the global thread index for both x and y dimensions
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int idy = blockIdx.y * blockDim.y + threadIdx.y;
-
-    // Check if the thread is within bounds
-    if (idx < cols && idy < rows) {
-        int index = idy * cols + idx;  // Convert 2D index to 1D
-        output[index] = 1.0f / (1.0f + expf(-input[index]));  // Sigmoid function
-    }
-}
-

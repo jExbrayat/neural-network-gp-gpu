@@ -12,4 +12,8 @@ CudaMatrixMemory::~CudaMatrixMemory() {
     cudaFree(device_ptr);
 }
 
+void CudaMatrixMemory::sendMatrix2Device(const float *carray) {
+    cudaMemcpy(device_ptr, carray, memory_size, cudaMemcpyHostToDevice);
+}
+
 

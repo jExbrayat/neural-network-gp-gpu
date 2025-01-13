@@ -12,6 +12,9 @@ public:
     // Class members
     float *device_ptr;
     unsigned int memory_size;
+
+    // Method
+    void sendMatrix2Device(const float *carray);
     
 private:
 };

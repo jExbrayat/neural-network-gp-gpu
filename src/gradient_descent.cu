@@ -16,6 +16,21 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
     num_layers = weights.size(); 
     layer_outputs.resize(num_layers);
     layer_activations.resize(num_layers + 1);
+
+    // Initialize cuda arrays (allocate memory)
+    for (size_t l = 0; l < num_layers; l++) {
+        // Weights
+        int wrows = weights[l].shape(0);
+        int wcols = weights[l].shape(1);
+        CudaMatrixMemory LayerWeights(wrows, wcols);
+        cuda_weights.push_back(LayerWeights);
+
+        // Biases
+        int brows = biases[l].shape(0);
+        int bcols = biases[l].shape(1);
+        CudaMatrixMemory LayerBiases(brows, bcols);
+        cuda_biases.push_back(LayerBiases);
+    }
 }
 
 

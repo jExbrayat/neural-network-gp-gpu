@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <optional>
+#include "cuda_utils.cuh"
 
 using namespace std;
 using namespace xt;
@@ -40,6 +41,12 @@ private:
     int num_layers;                   // Number of layers in the network
     vector<xarray<double>> layer_outputs;   // Layer outputs (linear activations)
     vector<xarray<double>> layer_activations;   // Layer activations after applying activation function
+
+    // Class members for cuda
+    vector<CudaMatrixMemory> cuda_weights; 
+    vector<CudaMatrixMemory> cuda_biases;
+    vector<CudaMatrixMemory> cuda_layer_outputs;  
+    vector<CudaMatrixMemory> cuda_layer_activations; 
 };
 
 #endif // GRADIENT_DESCENT_CUH

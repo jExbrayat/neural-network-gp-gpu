@@ -11,7 +11,6 @@
 #include <optional>
 #include "gradient_descent.cuh"
 
-using namespace std;
 using namespace xt;
 
 // Define class structure

@@ -5,7 +5,6 @@
 #include <xtensor/xarray.hpp>
 #include <nlohmann/json.hpp>
 #include <xtensor/xadapt.hpp>
-using namespace std;
 using namespace xt;
 
 xarray<double> sigmoid(xarray<double> x);

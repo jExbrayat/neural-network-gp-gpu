@@ -1,6 +1,3 @@
-#include <functional>
-#include <any>
-#include <vector>
 #include <iostream>
 #include <cuda.h>
 #include <cuda_runtime.h>

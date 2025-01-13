@@ -5,7 +5,6 @@
 #include <xtensor/xarray.hpp>
 #include <iostream>
 
-using namespace std;
 using namespace xt;
 
 class Autoencoder : public Model {

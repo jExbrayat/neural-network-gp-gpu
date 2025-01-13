@@ -16,5 +16,19 @@ void scale_data(xarray<double> &x);
 xarray<uint8_t> transform_mnist_images(vector<vector<uint8_t>> &x, std::array<size_t, 2> shape);
 xarray<int> transform_mnist_labels(vector<uint8_t> &y, array<size_t, 2> shape);
 void check_iostream_state(std::ios& iofile, const std::string& iofilepath);
+class ArrayHandler
+{
+public:
+    // Constructor
+    ArrayHandler();
+    
+    // Class members
+    xarray<double> xtarray;
+    float *carray;
+
+    // Methods
+    void cast_xtarray(const xarray<double> &xtarray);
+    void cast_carray(const float* carray, const int rows, const int cols);
+};
 
 #endif // UTILS_HPP

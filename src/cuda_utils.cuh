@@ -25,14 +25,8 @@ public:
 private:
 };
 
-class CudaKernel {
+class CudaGrid {
 public:
-    // Set the execute function (it can take any number of arguments of any type)
-    void setKernelFunction(const std::function<void(std::vector<std::any>)>& func);
-
-    // Call the execute function with arbitrary arguments
-    template <typename... Args>
-    void runKernel(Args... args);
     
     // Set threads and grid dim3 objects
     void setKernelGrid(const int blocksize_x, const int blocksize_y, const int rows, const int cols);
@@ -40,9 +34,6 @@ public:
     // Class members
     dim3 threads;
     dim3 grid;
-    
-private:
-    std::function<void(std::vector<std::any>)> kernel_function; // Store the function
 };
 
 __global__ void sigmoidKernel(const float* input, float* output, const int rows, const int cols);

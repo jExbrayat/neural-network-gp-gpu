@@ -22,21 +22,7 @@ void CudaMatrixMemory::sendMatrix2Device(const float *carray) {
     cudaMemcpy(device_ptr, carray, memory_size, cudaMemcpyHostToDevice);
 }
 
-void CudaKernel::setKernelFunction(const std::function<void(std::vector<std::any>)>& func) {
-    kernel_function = func;
-}
-
-// Run the kernel
-template <typename... Args>
-void runKernel(Args... args) {
-    if (kernel_function) {
-        kernel_function<<<grid, threads>>>(args...); // Use perfect forwarding for arguments
-    } else {
-        std::cerr << "Error: No kernel function assigned to runKernel.\n";
-    }
-}
-
-void CudaKernel::setKernelGrid(const int blocksize_x, const int blocksize_y, const int rows, const int cols) {
+void CudaGrid::setKernelGrid(const int blocksize_x, const int blocksize_y, const int rows, const int cols) {
     threads = dim3(blocksize_x, blocksize_y);
     grid = dim3((cols + blocksize_x - 1) / blocksize_x, (rows + blocksize_y - 1) / blocksize_y);
 }

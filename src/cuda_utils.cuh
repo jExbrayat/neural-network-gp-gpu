@@ -33,6 +33,13 @@ public:
     // Call the execute function with arbitrary arguments
     void runKernel(std::vector<std::any> args);
 
+    // Set threads and grid dim3 objects
+    void setKernelGrid(const int blocksize_x, const int blocksize_y, const int rows, const int cols);
+
+    // Class members
+    dim3 threads;
+    dim3 grid;
+    
 private:
     std::function<void(std::vector<std::any>)> kernel_function; // Store the function
 };

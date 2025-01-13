@@ -26,12 +26,19 @@ void CudaKernel::setKernelFunction(const std::function<void(std::vector<std::any
     kernel_function = func;
 }
 
-void CudaKernel::runKernel(std::vector<std::any> args) {
+// Run the kernel
+template <typename... Args>
+void runKernel(Args... args) {
     if (kernel_function) {
-        kernel_function(args); // Call the assigned function
+        kernel_function<<<grid, threads>>>(args...); // Use perfect forwarding for arguments
     } else {
-        std::cerr << "Error: No function assigned to execute.\n";
+        std::cerr << "Error: No kernel function assigned to runKernel.\n";
     }
+}
+
+void CudaKernel::setKernelGrid(const int blocksize_x, const int blocksize_y, const int rows, const int cols) {
+    threads = dim3(blocksize_x, blocksize_y);
+    grid = dim3((cols + blocksize_x - 1) / blocksize_x, (rows + blocksize_y - 1) / blocksize_y);
 }
 
 

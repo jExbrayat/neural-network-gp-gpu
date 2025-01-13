@@ -12,6 +12,8 @@ public:
     // Class members
     float *device_ptr;
     unsigned int memory_size;
+    const int rows;
+    const int cols;
 
     // Method
     void sendMatrix2Device(const float *carray);

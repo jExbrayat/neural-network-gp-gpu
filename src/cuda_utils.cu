@@ -4,7 +4,10 @@
 
 CudaMatrixMemory::CudaMatrixMemory(const int rows, const int cols) : rows(rows), cols(cols) {
     memory_size = sizeof(float) * rows * cols;
-    cudaMalloc((void**)&device_ptr, memory_size);
+    cudaError_t err = cudaMalloc((void**)&device_ptr, memory_size);
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA memory allocation failed: " << cudaGetErrorString(err) << std::endl;
+    }
 };
 
 CudaMatrixMemory::~CudaMatrixMemory() {

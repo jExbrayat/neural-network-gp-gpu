@@ -91,6 +91,10 @@ void ArrayHandler::cast_xtarray(const xarray<double> &xtarray) {
 }
 
 void ArrayHandler::cast_carray(const float* carray, const int rows, const int cols) {
+    // Assign class members
+    this->rows = rows;
+    this->cols = cols;
+    
     // Allocate memory for xtarray
     xtarray = xt::empty<double>({rows, cols});
 

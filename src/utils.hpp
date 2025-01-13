@@ -27,6 +27,8 @@ public:
     // Class members
     xarray<double> xtarray;
     float *carray;
+    int rows;
+    int cols; 
 
     // Methods
     void cast_xtarray(const xarray<double> &xtarray);

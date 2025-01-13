@@ -67,7 +67,9 @@ void check_iostream_state(std::ios& iofile, const std::string& iofilepath) {
     }
 }
 
-ArrayHandler::ArrayHandler() {};
+ArrayHandler::ArrayHandler() {
+    carray = nullptr;
+};
 
 void ArrayHandler::cast_xtarray(const xarray<double> &xtarray) {
     int rows = xtarray.shape(0);

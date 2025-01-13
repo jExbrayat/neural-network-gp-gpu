@@ -4,6 +4,8 @@
 #include <functional>
 #include <any>
 #include <vector>
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 class CudaMatrixMemory
 {

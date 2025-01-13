@@ -21,6 +21,8 @@ class ArrayHandler
 public:
     // Constructor
     ArrayHandler();
+    // Destructor
+    ~ArrayHandler();
     
     // Class members
     xarray<double> xtarray;

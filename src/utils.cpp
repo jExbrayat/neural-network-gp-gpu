@@ -99,3 +99,10 @@ void ArrayHandler::cast_carray(const float* carray, const int rows, const int co
         }
     }
 }
+
+ArrayHandler::~ArrayHandler() {
+    // Free dynamically allocated memory for carray
+    if (carray) {
+        delete[] carray;  // Delete the array if it was allocated
+    }
+}

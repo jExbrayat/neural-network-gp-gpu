@@ -1,8 +1,8 @@
 - [x] Rename sigma function sigmoid
 - [x] Clean useless #include
-- [ ] Write good headers (hpp)
+- [x] Write good headers (hpp)
 - [ ] Install code formater
 - [ ] Install libraries sorting tool
 - [ ] Check memory leaks
-- [ ] Do not include .cpp files
+- [x] Do not include .cpp files
 - [ ] Overcharge the fit() method in Autoencoder instead of defining it

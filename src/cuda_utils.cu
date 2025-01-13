@@ -5,7 +5,11 @@
 // Empty constructor
 CudaMatrixMemory::CudaMatrixMemory(const int rows, const int cols) {
     memory_size = sizeof(float) * rows * cols;
-    cudaMalloc((void**)device_ptr, memory_size);
+    cudaMalloc((void**)&device_ptr, memory_size);
 };
+
+CudaMatrixMemory::~CudaMatrixMemory() {
+    cudaFree(device_ptr);
+}
 
 

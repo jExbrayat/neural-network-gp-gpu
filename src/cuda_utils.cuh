@@ -6,6 +6,8 @@ class CudaMatrixMemory
 public:
     // Constructor
     CudaMatrixMemory(const int rows, const int cols);
+    // Destructor
+    ~CudaMatrixMemory();
 
     // Class members
     float *device_ptr;

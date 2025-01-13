@@ -40,3 +40,6 @@ clean:
 # Run rule to execute the program with srun
 run:
 	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB ./$(TARGET) config.json
+
+runtest:
+	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB ./$(TARGET) tests/autoencoder/testConfig.json

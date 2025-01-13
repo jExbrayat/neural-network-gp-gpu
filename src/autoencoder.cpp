@@ -9,10 +9,10 @@ using namespace std;
 void Autoencoder::fit(const xarray<double> &x_train, const unsigned int &epochs, const int &batch_size, const float &learning_rate)
 {
     // Create an instance of GradientDescent
-    GradientDescent gradientDescent(x_train, x_train, weights, biases);
+    GradientDescent gradientDescent(x_train, x_train, weights, biases, batch_size);
     
     // Train the model using the train method of GradientDescent
-    gradientDescent.train(epochs, batch_size, learning_rate);
+    gradientDescent.train(epochs, learning_rate);
     
     // Retrieve the results
     weights = gradientDescent.weights;

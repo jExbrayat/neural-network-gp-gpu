@@ -12,7 +12,7 @@ using namespace xt;
 
 // Define constructor
 // Just init class members
-GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<double> &y_train, vector<xarray<double>> &weights, vector<xarray<double>> &biases) : x_train(x_train), y_train(y_train), weights(weights), biases(biases) {
+GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<double> &y_train, vector<xarray<double>> &weights, vector<xarray<double>> &biases, const int batch_size) : x_train(x_train), y_train(y_train), weights(weights), biases(biases), batch_size(batch_size) {
     num_layers = weights.size(); 
     layer_outputs.resize(num_layers);
     layer_activations.resize(num_layers + 1);
@@ -121,7 +121,7 @@ void GradientDescent::backward_pass(const xarray<double> &y_batch, const int &cu
     }
 }
 
-void GradientDescent::train(const unsigned int &epochs, const int &batch_size, const float &learning_rate) {
+void GradientDescent::train(const unsigned int &epochs, const float &learning_rate) {
     int dataset_size = x_train.shape()[0];
     int batch_number = (dataset_size / batch_size);
 

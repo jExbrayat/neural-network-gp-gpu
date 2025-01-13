@@ -18,10 +18,10 @@ class GradientDescent
 public:
     // Constructor
     GradientDescent(const xarray<double>& x_train, const xarray<double>& y_train, 
-                    vector<xarray<double>>& weights, vector<xarray<double>>& biases);
+                    vector<xarray<double>>& weights, vector<xarray<double>>& biases, const int batch_size);
     
     // Method to start training
-    void train(const unsigned int& epochs, const int& batch_size, const float& learning_rate);
+    void train(const unsigned int& epochs, const float& learning_rate);
 
     // Class members
     vector<xarray<double>> weights;   // Weights of the network
@@ -29,6 +29,7 @@ public:
     vector<double> loss_history;      // History of loss over epochs
     xarray<double> x_train;           // Training data (inputs)
     xarray<double> y_train;           // Labels corresponding to the training data
+    const int batch_size;
 
 private:
     // Forward pass through the network

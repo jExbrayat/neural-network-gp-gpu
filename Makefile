@@ -38,5 +38,5 @@ clean:
 	rm -f $(TARGET) $(OBJFILES)
 
 # Run rule to execute the program with srun
-run: $(TARGET)
+run:
 	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB ./$(TARGET) config.json

@@ -6,6 +6,7 @@
 #include "gradient_descent.cuh"
 #include "utils.hpp"
 #include "cuda_utils.cuh"
+#include "debugging_utils.hpp"
 
 using namespace std;
 using namespace xt;
@@ -18,6 +19,14 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
     layer_activations.resize(num_layers + 1);
 
     // Initialize cuda arrays (allocate memory)
+    
+    // Init first layer input, which is the transpose of x_batch
+    // Note that the indexing of LA (layer_activations) is somehow décalé: LA_l is the input of the layer L and output of the layer l-1
+    int larows = x_train.shape(1);
+    int lacols = batch_size;
+    CudaMatrixMemory InitLayerActivation(larows, lacols);
+    cuda_layer_activations.push_back(InitLayerActivation);
+    
     for (size_t l = 0; l < num_layers; l++) {
         // Weights
         int wrows = weights[l].shape(0);
@@ -30,7 +39,25 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
         int bcols = biases[l].shape(1);
         CudaMatrixMemory LayerBiases(brows, bcols);
         cuda_biases.push_back(LayerBiases);
-    }
+
+        // Layer output = W_l * LA_l + B_l
+        int lorows = wrows;
+        int locols = cuda_layer_activations[l].cols;
+        CudaMatrixMemory LayerOutput(lorows, locols);
+        cuda_layer_outputs.push_back(LayerOutput);
+
+        // Layer activation = sigmoid( LO_{l-1} )
+        // We are pushing the element l + 1 of the vector now (because of the initialization before the loop)
+        int larows = lorows;
+        int lacols = locols;
+        CudaMatrixMemory LayerActivation(larows, lacols);
+        cuda_layer_activations.push_back(LayerActivation);
+
+        printCudaMatrixShapes(LayerWeights, "LayerWeights");
+        printCudaMatrixShapes(LayerBiases, "LayerBiases");
+        printCudaMatrixShapes(LayerOutput, "LayerOutput");
+        printCudaMatrixShapes(LayerActivation, "LayerActivation");
+    }  
 }
 
 

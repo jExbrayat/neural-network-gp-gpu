@@ -93,8 +93,8 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
         CudaGrid matMulGrid;
         CudaGrid addGrid;
         CudaGrid sigmoidGrid;
-        matMulGrid.setKernelGrid(16, 16, w.rows, w.cols);
-        addGrid.setKernelGrid(16, 16, w.rows, w.cols);
+        matMulGrid.setKernelGrid(16, 16, w.rows, la.cols);
+        addGrid.setKernelGrid(16, 16, w.rows, la.cols);
         sigmoidGrid.setKernelGrid(16, 16, la_next.rows, la_next.cols);
 
         matrixMulKernel<<<matMulGrid.grid, matMulGrid.threads>>>(w.device_ptr, la.device_ptr, lo.device_ptr, w.rows, w.cols, la.cols); // w * la, write the result in lo

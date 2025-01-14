@@ -85,10 +85,29 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
     // Perform computations with cuda
     for (size_t l = 0; l < num_layers; l++) {
         CudaMatrixMemory& w = cuda_weights[l];
+        ArrayHandler get_weights;
+        get_weights.cast_xtarray(weights[l]);
+        w.sendMatrix2Device(get_weights.carray);
+        
         CudaMatrixMemory& b = cuda_biases[l];
+        ArrayHandler get_biases;
+        get_biases.cast_xtarray(biases[l]);
+        b.sendMatrix2Device(get_biases.carray);
+
         CudaMatrixMemory& lo = cuda_layer_outputs[l];
-        CudaMatrixMemory& la = cuda_layer_activations[l];        
+        ArrayHandler get_lo;
+        get_lo.cast_xtarray(layer_outputs[l]);
+        lo.sendMatrix2Device(get_lo.carray);
+
+        CudaMatrixMemory& la = cuda_layer_activations[l];
+        ArrayHandler get_la;
+        get_la.cast_xtarray(layer_activations[l]);
+        la.sendMatrix2Device(get_la.carray);
+
         CudaMatrixMemory& la_next = cuda_layer_activations[l + 1];
+        ArrayHandler get_la_next;
+        get_la_next.cast_xtarray(layer_activations[l + 1]);
+        la_next.sendMatrix2Device(get_la_next.carray);
         
         CudaGrid matMulGrid;
         CudaGrid addGrid;

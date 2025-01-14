@@ -15,7 +15,7 @@ using namespace std;
 
 int main() {
 
-    xarray<float> axt = xarray<float>{{1, 1, 1}, {1, 1, 1}};
+    xarray<float> axt = xarray<float>{{2, 2, 2}, {1, 1, 1}};
     xarray<float> bxt = xarray<float>{{1, 1}, {1, 1}, {1, 1}};
     xarray<double> cxt = xarray<double>{{1.0, 1.0}};
     print_shapes(cxt, "cxt shape: ");
@@ -30,8 +30,10 @@ int main() {
     a.allocateCudaMemory();
     CudaMatrixMemory b(3, 2);
     b.allocateCudaMemory();
-    CudaMatrixMemory c(2, 1);
+    CudaMatrixMemory c(2, 1); // bias
     c.allocateCudaMemory();
+    CudaMatrixMemory d(2, 2); // result
+    d.allocateCudaMemory();
 
     a.sendMatrix2Device(ah.carray);
     b.sendMatrix2Device(bh.carray);
@@ -44,17 +46,16 @@ int main() {
     addGrid.setKernelGrid(16, 16, a.rows, b.cols);
     sigmoidGrid.setKernelGrid(16, 16, a.rows, b.cols);
 
-    matrixMulKernel<<<matMulGrid.grid, matMulGrid.threads>>>(a.device_ptr, b.device_ptr, c.device_ptr, a.rows, a.cols, b.cols); // w * la, write the result in lo
-    addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(c.device_ptr, b.device_ptr, c.device_ptr, c.rows, c.cols);
-    sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(c.device_ptr, c.device_ptr, c.rows, c.cols);
+    matrixMulKernel<<<matMulGrid.grid, matMulGrid.threads>>>(a.device_ptr, b.device_ptr, d.device_ptr, a.rows, a.cols, b.cols); // w * la, write the result in lo
+    addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(d.device_ptr, c.device_ptr, d.device_ptr, c.rows, c.cols);
+    sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(d.device_ptr, d.device_ptr, d.rows, d.cols);
 
     float *resa = a.allocAndSend2Host();
     float *resb = b.allocAndSend2Host();
     float *resc = c.allocAndSend2Host();
+    float *resd = d.allocAndSend2Host();
 
-    print_carray(resa, a.rows, a.cols, "resa: ");
-    print_carray(resb, b.rows, b.cols, "resb: ");
-    print_carray(resc, c.rows, c.cols, "resc: ");
+    print_carray(resd, d.rows, d.cols, "resd: ");
 
     cout << "end of tests" << endl;
     return 0;

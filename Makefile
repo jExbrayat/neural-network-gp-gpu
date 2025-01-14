@@ -43,9 +43,11 @@ run:
 
 
 # For testing purposes, including test.cpp and excluding others
-SRCFILES_CPP_TEST = $(filter-out $(SRC_DIR)/gradient_descent.cpp $(SRC_DIR)/autoencoder.cpp $(SRC_DIR)/model.cpp $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/test.cpp))
+SRCFILES_CPP_TEST = $(filter-out $(SRC_DIR)/autoencoder.cpp $(SRC_DIR)/model.cpp $(SRC_DIR)/main.cpp, $(SRCFILES_CPP))
+SRCFILES_CU_TEST = $(filter-out $(SRC_DIR)/gradient_descent.cu, $(SRCFILES_CU))
 OBJFILES_CPP_TEST = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCFILES_CPP_TEST))
-OBJFILES_TEST = $(OBJFILES_CPP_TEST)
+OBJFILES_CU_TEST = $(patsubst $(SRC_DIR)/%.cu, $(BUILD_DIR)/%.o, $(SRCFILES_CU_TEST))
+OBJFILES_TEST = $(OBJFILES_CPP_TEST) $(OBJFILES_CU_TEST)
 
 # Rule to compile test-related files
 test: $(OBJFILES_TEST)
@@ -56,4 +58,4 @@ clean_test:
 	rm -f $(BUILD_DIR)/test_program $(OBJFILES_TEST)
 
 runtest:
-	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB $(BUILD_DIR)/test_program config.json
+	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB $(BUILD_DIR)/test_program

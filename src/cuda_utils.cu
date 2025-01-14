@@ -13,9 +13,8 @@ void CudaThrowError::throwError(std::string custom_msg) {
 CudaMatrixMemory::CudaMatrixMemory(const int rows, const int cols) : rows(rows), cols(cols) {
     memory_size = sizeof(float) * rows * cols;
     cudaError_t err = cudaMalloc((void**)&device_ptr, memory_size);
-    if (err != cudaSuccess) {
-        std::cerr << "CUDA memory allocation failed: " << cudaGetErrorString(err) << std::endl;
-    }
+    CudaThrowError throwErr(err);
+    throwErr.throwError("cudaMalloc failed: ");
 };
 
 CudaMatrixMemory::~CudaMatrixMemory() {
@@ -23,7 +22,25 @@ CudaMatrixMemory::~CudaMatrixMemory() {
 }
 
 void CudaMatrixMemory::sendMatrix2Device(const float *carray) {
-    cudaMemcpy(device_ptr, carray, memory_size, cudaMemcpyHostToDevice);
+    cudaError_t err = cudaMemcpy(device_ptr, carray, memory_size, cudaMemcpyHostToDevice);
+    CudaThrowError throwErr(err);
+    throwErr.throwError("cudaMemcpy failed: ");
+}
+
+float* CudaMatrixMemory::allocAndSend2Host() {
+    // Allocate memory for the host
+    float* host_ptr = new float[rows * cols]; // Use new[] for proper cleanup with delete[]
+    
+    if (host_ptr == nullptr) { // Check for successful allocation
+        throw std::runtime_error("Memory allocation failed on host.");
+    }
+    
+    // Copy data from device to host
+    cudaError_t err = cudaMemcpy(host_ptr, device_ptr, memory_size, cudaMemcpyDeviceToHost);
+    CudaThrowError throwErr(err);
+    throwErr.throwError("cudaMemcpy failed: ");
+
+    return host_ptr;
 }
 
 void CudaGrid::setKernelGrid(const int blocksize_x, const int blocksize_y, const int rows, const int cols) {

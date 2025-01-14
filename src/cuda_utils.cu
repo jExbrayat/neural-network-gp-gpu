@@ -21,9 +21,9 @@ void CudaMatrixMemory::allocateCudaMemory() {
     throwErr.throwError("cudaMalloc failed: ");
 }
 
-CudaMatrixMemory::~CudaMatrixMemory() {
-    cudaFree(device_ptr);
-}
+// The user of the class is responsible for freeing the cuda allocated memory.
+// This behavior should better changed but is due to the objects going out of scope at the end of the GradientDescent constructor 
+CudaMatrixMemory::~CudaMatrixMemory() {}
 
 void CudaMatrixMemory::sendMatrix2Device(const float *carray) {
     cudaError_t err = cudaMemcpy(device_ptr, carray, memory_size, cudaMemcpyHostToDevice);

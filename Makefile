@@ -9,10 +9,10 @@ SRC_DIR = src
 BUILD_DIR = build
 
 # Source files
-CUDA_SRCS = $(SRC_DIR)/cuda_operations.cu $(SRC_DIR)/gradient_descent.cu $(SRC_DIR)/cuda_utils.cu
-CPP_SRCS = $(filter-out $(SRC_DIR)/main.cpp $(SRC_DIR)/test.cpp, $(wildcard $(SRC_DIR)/*.cpp))
+CUDA_SRCS = $(SRC_DIR)/cuda_operations.cu $(SRC_DIR)/gradient_descent.cu $(SRC_DIR)/cuda_utils.cu $(SRC_DIR)/test.cu
+CPP_SRCS = $(filter-out $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/*.cpp))
 MAIN_CPP = $(SRC_DIR)/main.cpp
-TEST_CPP = $(SRC_DIR)/test.cpp
+TEST_CPP = $(SRC_DIR)/test.cu
 
 # Object files
 CUDA_OBJS = $(patsubst $(SRC_DIR)/%.cu, $(BUILD_DIR)/%.o, $(CUDA_SRCS))
@@ -30,7 +30,7 @@ TEST_EXEC = build/test_program
 all: $(MAIN_EXEC) $(TEST_EXEC)
 
 # Rule for the main program
-$(MAIN_EXEC): $(CUDA_OBJS) $(CPP_OBJS) $(MAIN_OBJ)
+$(MAIN_EXEC): $(filter-out $(TEST_OBJ), $(CUDA_OBJS) $(CPP_OBJS) $(MAIN_OBJ))
 	$(NVCC) $(NVCCFLAGS) -o $@ $^
 
 # Rule for the test program

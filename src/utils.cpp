@@ -23,6 +23,19 @@ void print_shapes(xarray<double> &array, string msg) {
     cout << array.shape(0) << ", " << array.shape(1) << endl;
 }
 
+void print_carray(float *carray, int rows, int cols, string msg) {
+    // Print using row major matrix definition rule
+    cout << msg << endl;
+    for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			std::cout << carray[i * cols + j] << " ";
+		}
+		std::cout<<std::endl;
+	}
+}
+
 nlohmann::json read_json(const string &config_file_path) {
     std::ifstream file(config_file_path);
     if (!file.is_open())

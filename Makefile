@@ -1,61 +1,61 @@
 # Compiler and flags
 NVCC = nvcc
-CXX = g++  # or use your C++ compiler (e.g., clang++ or g++)
+CXX = g++
+CXXFLAGS = -std=c++17 -I"libraries/include" -I"src"
+NVCCFLAGS = -std=c++17 -I"libraries/include" -I"src"
 
-# Define directories
+# Directories
 SRC_DIR = src
 BUILD_DIR = build
-TARGET = $(BUILD_DIR)/main
 
-# Source files: Collect all .cpp and .cu files in the src directory
-SRCFILES_CPP = $(wildcard $(SRC_DIR)/*.cpp)
-SRCFILES_CU = $(wildcard $(SRC_DIR)/*.cu)
+# Source files
+CUDA_SRCS = $(SRC_DIR)/cuda_operations.cu $(SRC_DIR)/gradient_descent.cu $(SRC_DIR)/cuda_utils.cu
+CPP_SRCS = $(filter-out $(SRC_DIR)/main.cpp $(SRC_DIR)/test.cpp, $(wildcard $(SRC_DIR)/*.cpp))
+MAIN_CPP = $(SRC_DIR)/main.cpp
+TEST_CPP = $(SRC_DIR)/test.cpp
 
-# Included libraries and headers
-LIBRARIES = libraries/include
+# Object files
+CUDA_OBJS = $(patsubst $(SRC_DIR)/%.cu, $(BUILD_DIR)/%.o, $(CUDA_SRCS))
+CPP_OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(CPP_SRCS))
+MAIN_OBJ = $(BUILD_DIR)/main.o
+TEST_OBJ = $(BUILD_DIR)/test.o
 
-# Object files (compiling .cpp and .cu into .o) -- put them in the build directory
-OBJFILES_CPP = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCFILES_CPP))
-OBJFILES_CU = $(patsubst $(SRC_DIR)/%.cu, $(BUILD_DIR)/%.o, $(SRCFILES_CU))
+# Executables
+MAIN_EXEC = build/main_program
+TEST_EXEC = build/test_program
 
-# Combine both object files into a single list for the final target
-OBJFILES = $(OBJFILES_CPP) $(OBJFILES_CU)
+# Rules
+.PHONY: all clean
 
-# Rule to compile the program
-$(TARGET): $(OBJFILES)
-	$(NVCC) -I $(SRC_DIR) -I $(LIBRARIES) $(OBJFILES) -o $(TARGET)
+all: $(MAIN_EXEC) $(TEST_EXEC)
 
-# Rule to create .o intermediary files for .cpp files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) -c $< -o $@ -I$(SRC_DIR) -I$(LIBRARIES)
+# Rule for the main program
+$(MAIN_EXEC): $(CUDA_OBJS) $(CPP_OBJS) $(MAIN_OBJ)
+	$(NVCC) $(NVCCFLAGS) -o $@ $^
 
-# Rule to create .o intermediary files for .cu files
+# Rule for the test program
+$(TEST_EXEC): $(filter-out $(BUILD_DIR)/model.o $(BUILD_DIR)/autoencoder.o $(BUILD_DIR)/gradient_descent.o $(MAIN_OBJ), $(CPP_OBJS) $(CUDA_OBJS)) $(TEST_OBJ)
+	$(NVCC) $(NVCCFLAGS) -o $@ $^
+
+# Compile CUDA source files to object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cu
-	$(NVCC) -c $< -o $@ -I$(SRC_DIR) -I$(LIBRARIES)
+	@mkdir -p $(BUILD_DIR)
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
 
-# Clean rule to remove compiled files
-clean:
-	rm -f $(TARGET) $(OBJFILES)
+# Compile C++ source files to object files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Run rule to execute the program with srun
+# Run main program
 run:
-	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB ./$(TARGET) config.json
+	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB $(MAIN_EXEC) config.json
 
-
-# For testing purposes, including test.cpp and excluding others
-SRCFILES_CPP_TEST = $(filter-out $(SRC_DIR)/autoencoder.cpp $(SRC_DIR)/model.cpp $(SRC_DIR)/main.cpp, $(SRCFILES_CPP))
-SRCFILES_CU_TEST = $(filter-out $(SRC_DIR)/gradient_descent.cu, $(SRCFILES_CU))
-OBJFILES_CPP_TEST = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCFILES_CPP_TEST))
-OBJFILES_CU_TEST = $(patsubst $(SRC_DIR)/%.cu, $(BUILD_DIR)/%.o, $(SRCFILES_CU_TEST))
-OBJFILES_TEST = $(OBJFILES_CPP_TEST) $(OBJFILES_CU_TEST)
-
-# Rule to compile test-related files
-test: $(OBJFILES_TEST)
-	$(NVCC) -I $(SRC_DIR) -I $(LIBRARIES) $(OBJFILES_TEST) -o $(BUILD_DIR)/test_program
-
-# Clean test-related compiled files
-clean_test:
-	rm -f $(BUILD_DIR)/test_program $(OBJFILES_TEST)
-
+# Run test program
 runtest:
-	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB $(BUILD_DIR)/test_program
+	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB $(TEST_EXEC)
+
+
+# Clean build files
+clean:
+	rm -rf $(BUILD_DIR) $(MAIN_EXEC) $(TEST_EXEC)

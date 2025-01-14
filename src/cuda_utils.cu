@@ -3,6 +3,13 @@
 #include <cuda_runtime.h>
 #include "cuda_utils.cuh"
 
+CudaThrowError::CudaThrowError(cudaError_t error): error(error) {}
+void CudaThrowError::throwError(std::string custom_msg) {
+    if (error != cudaSuccess) {
+        std::cerr << custom_msg << cudaGetErrorString(error) << std::endl;
+    }
+}
+
 CudaMatrixMemory::CudaMatrixMemory(const int rows, const int cols) : rows(rows), cols(cols) {
     memory_size = sizeof(float) * rows * cols;
     cudaError_t err = cudaMalloc((void**)&device_ptr, memory_size);

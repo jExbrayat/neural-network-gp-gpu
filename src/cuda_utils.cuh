@@ -6,6 +6,14 @@
 #include <vector>
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <iostream>
+
+class CudaThrowError {
+public:
+    CudaThrowError(cudaError_t error);
+    void throwError(std::string custom_msg);
+    cudaError_t error;
+};
 
 class CudaMatrixMemory
 {

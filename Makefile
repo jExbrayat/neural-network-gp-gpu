@@ -41,5 +41,19 @@ clean:
 run:
 	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB ./$(TARGET) config.json
 
+
+# For testing purposes, including test.cpp and excluding others
+SRCFILES_CPP_TEST = $(filter-out $(SRC_DIR)/gradient_descent.cpp $(SRC_DIR)/autoencoder.cpp $(SRC_DIR)/model.cpp $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/test.cpp))
+OBJFILES_CPP_TEST = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCFILES_CPP_TEST))
+OBJFILES_TEST = $(OBJFILES_CPP_TEST)
+
+# Rule to compile test-related files
+test: $(OBJFILES_TEST)
+	$(NVCC) -I $(SRC_DIR) -I $(LIBRARIES) $(OBJFILES_TEST) -o $(BUILD_DIR)/test_program
+
+# Clean test-related compiled files
+clean_test:
+	rm -f $(BUILD_DIR)/test_program $(OBJFILES_TEST)
+
 runtest:
-	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB ./$(TARGET) tests/autoencoder/testConfig.json
+	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB $(BUILD_DIR)/test_program config.json

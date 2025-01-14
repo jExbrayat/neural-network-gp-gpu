@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
     xarray<float> axt = xarray<float>{{1, 1, 1}, {1, 1, 1}};
-    xarray<float> bxt = xarray<float>{{1, 1, 1}, {1, 1, 1}};
+    xarray<float> bxt = xarray<float>{{1, 1}, {1, 1}, {1, 1}};
     xarray<double> cxt = xarray<double>{{1.0, 1.0}};
     print_shapes(cxt, "cxt shape: ");
     ArrayHandler ah;

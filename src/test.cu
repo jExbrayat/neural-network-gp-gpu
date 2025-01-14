@@ -28,7 +28,7 @@ int main() {
     
     CudaMatrixMemory a(2, 3);
     a.allocateCudaMemory();
-    CudaMatrixMemory b(2, 3);
+    CudaMatrixMemory b(3, 2);
     b.allocateCudaMemory();
     CudaMatrixMemory c(2, 1);
     c.allocateCudaMemory();
@@ -52,6 +52,8 @@ int main() {
     float *resb = b.allocAndSend2Host();
     float *resc = c.allocAndSend2Host();
 
+    print_carray(resa, a.rows, a.cols, "resa: ");
+    print_carray(resb, b.rows, b.cols, "resb: ");
     print_carray(resc, c.rows, c.cols, "resc: ");
 
     cout << "end of tests" << endl;

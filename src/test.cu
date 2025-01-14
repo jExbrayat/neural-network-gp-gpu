@@ -9,6 +9,7 @@
 #include <xtensor/xview.hpp>
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <xtensor/xio.hpp>
 
 using namespace xt;
 using namespace std;
@@ -56,6 +57,10 @@ int main() {
     float *resd = d.allocAndSend2Host();
 
     print_carray(resd, d.rows, d.cols, "resd: ");
+
+    ArrayHandler h_resd;
+    h_resd.cast_carray(resd, d.rows, d.cols);
+    cout << h_resd.xtarray << endl;
 
     cout << "end of tests" << endl;
     return 0;

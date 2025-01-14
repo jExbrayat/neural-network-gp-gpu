@@ -11,11 +11,16 @@ void CudaThrowError::throwError(std::string custom_msg) {
 }
 
 CudaMatrixMemory::CudaMatrixMemory(const int rows, const int cols) : rows(rows), cols(cols) {
+};
+
+float* CudaMatrixMemory::allocateCudaMemory() {
+    float *device_ptr_;
     memory_size = sizeof(float) * rows * cols;
     cudaError_t err = cudaMalloc((void**)&device_ptr, memory_size);
     CudaThrowError throwErr(err);
     throwErr.throwError("cudaMalloc failed: ");
-};
+    return device_ptr_;
+}
 
 CudaMatrixMemory::~CudaMatrixMemory() {
     cudaFree(device_ptr);

@@ -7,6 +7,7 @@
 #include "utils.hpp"
 #include "cuda_utils.cuh"
 #include "debugging_utils.hpp"
+#include "cuda_operations.cuh"
 
 using namespace std;
 using namespace xt;
@@ -25,6 +26,7 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
     int larows = x_train.shape(1);
     int lacols = batch_size;
     CudaMatrixMemory InitLayerActivation(larows, lacols);
+    InitLayerActivation.allocateCudaMemory();
     cuda_layer_activations.push_back(InitLayerActivation);
     
     for (size_t l = 0; l < num_layers; l++) {
@@ -32,18 +34,21 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
         int wrows = weights[l].shape(0);
         int wcols = weights[l].shape(1);
         CudaMatrixMemory LayerWeights(wrows, wcols);
+        LayerWeights.allocateCudaMemory();
         cuda_weights.push_back(LayerWeights);
 
         // Biases
         int brows = biases[l].shape(0);
         int bcols = biases[l].shape(1);
         CudaMatrixMemory LayerBiases(brows, bcols);
+        LayerBiases.allocateCudaMemory();
         cuda_biases.push_back(LayerBiases);
 
         // Layer output = W_l * LA_l + B_l
         int lorows = wrows;
         int locols = cuda_layer_activations[l].cols;
         CudaMatrixMemory LayerOutput(lorows, locols);
+        LayerOutput.allocateCudaMemory();
         cuda_layer_outputs.push_back(LayerOutput);
 
         // Layer activation = sigmoid( LO_{l-1} )
@@ -51,12 +56,14 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
         int larows = lorows;
         int lacols = locols;
         CudaMatrixMemory LayerActivation(larows, lacols);
+        LayerActivation.allocateCudaMemory();
         cuda_layer_activations.push_back(LayerActivation);
 
         printCudaMatrixShapes(LayerWeights, "LayerWeights");
         printCudaMatrixShapes(LayerBiases, "LayerBiases");
         printCudaMatrixShapes(LayerOutput, "LayerOutput");
         printCudaMatrixShapes(LayerActivation, "LayerActivation");
+        cudaDeviceSynchronize();
     }  
 }
 
@@ -70,59 +77,52 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
     // Transform xtarray into carray
     ArrayHandler XBATCH_T;
     XBATCH_T.cast_xtarray(layer_activations[0]);
+
+    // Copy XBATCH_T into cuda_layer_activations[0] i.e. the network's input
+    CudaMatrixMemory& network_input = cuda_layer_activations[0];
+    network_input.sendMatrix2Device(XBATCH_T.carray);
     
-    // // Allocate cuda memory
-    // vector<CudaMatrixMemory> cuda_l_o;
-    // vector<CudaMatrixMemory> cuda_l_a;
-    
-    // // Init the first layer activation
-    // CudaMatrixMemory init_l_a(XBATCH_T.rows, XBATCH_T.cols);
-    // init_l_a.sendMatrix2Device(XBATCH_T.carray);
-    // cuda_l_a.push_back(init_l_a);
-
-    // // Initialize cuBLAS
-    // cublasHandle_t handle;
-    // cublasCreate(&handle);
-    
-    // // Allocate iteratively
-    // for (size_t l = 0; l < num_layers; l++) {
-    //     // Cast xtarrays
-    //     ArrayHandler WEIGHTS;
-    //     ArrayHandler BIASES;
-    //     WEIGHTS.cast_xtarray(weights[l]);
-    //     BIASES.cast_xtarray(biases[l]);
-
-    //     // Send matrices in cuda
-    //     CudaMatrixMemory cuda_w(WEIGHTS.rows, WEIGHTS.cols);
-    //     CudaMatrixMemory cuda_b(BIASES.rows, BIASES.cols);
-    //     cuda_w.sendMatrix2Device(WEIGHTS.carray);
-    //     cuda_b.sendMatrix2Device(BIASES.carray);
-
-    //     // Perform operation with cuBLAS
-    //     float alpha = 1.0f;
-    //     float beta = 0.f;
-    //     int M = WEIGHTS.rows;
-    //     int K = WEIGHTS.cols;
-    //     int N = cuda_l_a[l].cols;
-    //     // Allocate memory for result
-    //     CudaMatrixMemory result(M, N);
-    //     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, &alpha, cuda_w.device_ptr, K, cuda_l_a[l].device_ptr, N, &beta, result.device_ptr, N);
-    //     cublasSgeam(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, &alpha, result.device_ptr, N, &beta, cuda_b.device_ptr, N, result.device_ptr, N);
-    //     // Allocate memory for activated result
-    //     CudaMatrixMemory activated_result(M, N);
-    //     CudaKernel activateLayer;
-    //     activateLayer.setKernelFunction(sigmoidKernel);
-    //     activateLayer.setKernelGrid(16, 16, M, N);
-    //     activateLayer.runKernel(result.device_ptr, activated_result.device_ptr, M, N);
-                
-    //     cuda_l_o.push_back(result);
-    //     cuda_l_a.push_back(activated_result);
-    // } 
-
+    // Perform computations with cuda
     for (size_t l = 0; l < num_layers; l++) {
-        layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
-        layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in utils/utils.cpp
+        CudaMatrixMemory& w = cuda_weights[l];
+        CudaMatrixMemory& b = cuda_biases[l];
+        CudaMatrixMemory& lo = cuda_layer_outputs[l];
+        CudaMatrixMemory& la = cuda_layer_activations[l];        
+        CudaMatrixMemory& la_next = cuda_layer_activations[l + 1];
+        
+        CudaGrid matMulGrid;
+        CudaGrid addGrid;
+        CudaGrid sigmoidGrid;
+        matMulGrid.setKernelGrid(16, 16, w.rows, w.cols);
+        addGrid.setKernelGrid(16, 16, w.rows, w.cols);
+        sigmoidGrid.setKernelGrid(16, 16, la_next.rows, la_next.cols);
+
+        matrixMulKernel<<<matMulGrid.grid, matMulGrid.threads>>>(w.device_ptr, la.device_ptr, lo.device_ptr, w.rows, w.cols, la.cols); // w * la, write the result in lo
+        addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(lo.device_ptr, b.device_ptr, lo.device_ptr, lo.rows, lo.cols);
+        sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(lo.device_ptr, la_next.device_ptr, la_next.rows, la_next.cols);
+ 
+        // Copy back the computations into the base pipeline
+        float* w_host = w.allocAndSend2Host();
+        float* b_host = b.allocAndSend2Host();
+        float* lo_host = lo.allocAndSend2Host();
+        float* la_host = la.allocAndSend2Host();
+        float* la_next_host = la_next.allocAndSend2Host();
+
+        // Assign to base pipeline
+        ArrayHandler lo_xt;
+        lo_xt.cast_carray(lo_host, lo.rows, lo.cols);
+        layer_outputs[l] = lo_xt.xtarray;
+        
+        ArrayHandler la_next_xt;
+        la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
+        layer_activations[l + 1] = la_next_xt.xtarray;  
     }
+
+
+    // for (size_t l = 0; l < num_layers; l++) {
+    //     layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
+    //     layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in utils/utils.cpp
+    // }
 }
 
 void GradientDescent::backward_pass(const xarray<double> &y_batch, const int &current_batch_size, const float &learning_rate) {
@@ -159,12 +159,16 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
         int batch_id = 0;
 
         for (int batch_start = 0; batch_start < dataset_size; batch_start += batch_size) {
+            if (batch_start + batch_size > x_train.shape(0)) { // Fixed batch size. If the current batch exceeds the end of the dataset, break.
+                break;
+            }
+            
             // Plot currently processed batch number and increment
             cout << "   Batch: " << batch_id << " / " << batch_number << endl;
             batch_id++;
 
             // Compute the current batch size, as defined normally but smaller if at the end of epoch
-            int current_batch_size = std::min(batch_size, dataset_size - batch_start);
+            int current_batch_size = batch_size;
             xarray<double> x_batch = xt::view(x_train, range(batch_start, batch_start + current_batch_size), all());
             xarray<double> y_batch = xt::view(y_train, range(batch_start, batch_start + current_batch_size), all());
 

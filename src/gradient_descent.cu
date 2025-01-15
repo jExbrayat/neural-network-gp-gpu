@@ -29,6 +29,13 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
     InitLayerActivation.allocateCudaMemory();
     cuda_layer_activations.push_back(InitLayerActivation);
     
+    // Init first delta i.e. the delta tensor of the last layer
+    int init_deltarows = x_train.shape(1); // nb features
+    int init_deltacols = batch_size;
+    CudaMatrixMemory InitLayerDelta(init_deltarows, init_deltacols);
+    InitLayerDelta.allocateCudaMemory();
+    cuda_deltas.push_back(InitLayerDelta);
+
     for (size_t l = 0; l < num_layers; l++) {
         // Weights
         int wrows = weights[l].shape(0);
@@ -58,6 +65,14 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
         CudaMatrixMemory LayerActivation(larows, lacols);
         LayerActivation.allocateCudaMemory();
         cuda_layer_activations.push_back(LayerActivation);
+
+        if (l > 0) { // Otherwise do nothing since the first value is initialized already
+            int deltarows = weights[num_layers - l].shape(1);
+            int deltacols = cuda_deltas[num_layers - l].cols;
+            CudaMatrixMemory LayerDelta(deltarows, deltacols);
+            LayerDelta.allocateCudaMemory();
+            cuda_deltas.push_back(LayerDelta);
+        }
 
         printCudaMatrixShapes(LayerWeights, "LayerWeights");
         printCudaMatrixShapes(LayerBiases, "LayerBiases");

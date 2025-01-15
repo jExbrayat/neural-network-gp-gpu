@@ -48,6 +48,8 @@ private:
     vector<CudaMatrixMemory> cuda_biases;
     vector<CudaMatrixMemory> cuda_layer_outputs;  
     vector<CudaMatrixMemory> cuda_layer_activations; 
+
+    vector<CudaMatrixMemory> cuda_deltas;
 };
 
 #endif // GRADIENT_DESCENT_CUH

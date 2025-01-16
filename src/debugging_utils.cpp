@@ -16,6 +16,7 @@ void checkCudaComputation(CudaMatrixMemory &cuda_array, xt::xarray<float> &refer
         std::cout << "The shapes of reference and target do not match:" << std::endl;
         print_shapes(reference_xtarray, "   Reference: ");
         std::cout << "   Target: " << cuda_array.rows << ", " << cuda_array.cols << std::endl;
+        throw std::runtime_error("Shape mismatch between reference and target arrays");
     }
     
 

@@ -69,3 +69,15 @@ __global__ void sigmoidDerivativeKernel(const float* input, float* output, const
 float _sigmoid(float x) {
     return 1.0f / (1.0f + expf(-x));
 }
+
+__global__ void transposeKernel(const float* input, float* output, const int rows, const int cols) {
+    // Compute the global thread index for both x and y dimensions
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (idx < cols && idy < rows) {
+        int input_index = idy * cols + idx;
+        int output_index = idx * rows + idy;
+        output[output_index] = input[input_index];        
+    }
+}

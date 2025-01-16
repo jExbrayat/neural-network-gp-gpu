@@ -11,4 +11,6 @@ __global__ void sigmoidKernel(const float* input, float* output, const int rows,
 
 __global__ void sigmoidDerivativeKernel(const float* input, float* output, const int rows, const int cols);
 
+__global__ void transposeKernel(const float* input, float* output, const int rows, const int cols);
+
 #endif

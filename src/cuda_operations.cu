@@ -28,6 +28,19 @@ __global__ void addBiasToMatrixKernel(const float* matrix, const float* biases, 
     }
 }
 
+/**
+ * @brief Perform A + lambda B
+ */
+__global__ void addMatrixToMatrix(const float* A, const float* B, float lambda, float* result, int rows, int cols) {
+    // Compute the global thread index for both x and y dimensions
+    int idx = blockIdx.x * blockDim.x + threadIdx.x; // Column index
+    int idy = blockIdx.y * blockDim.y + threadIdx.y; // Row index
+
+    if (idx < cols && idy < rows) {
+        result[idy * cols + idx] = A[idy * cols + idx] + lambda * B[idy * cols + idx];
+    }
+}
+
 __global__ void sigmoidKernel(const float* input, float* output, const int rows, const int cols) {
     // Compute the global thread index for both x and y dimensions
     int idx = blockIdx.x * blockDim.x + threadIdx.x;

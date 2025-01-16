@@ -150,6 +150,12 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
         ArrayHandler la_next_xt;
         la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
         layer_activations[l + 1] = la_next_xt.xtarray;  
+
+        delete[] w_host;
+        delete[] b_host;
+        delete[] lo_host;
+        delete[] la_host;
+        delete[] la_next_host;
     }
 
 

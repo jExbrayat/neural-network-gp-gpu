@@ -33,7 +33,7 @@ void checkCudaComputation(CudaMatrixMemory &cuda_array, xt::xarray<float> &refer
         }
     }
 
-    float error_rate = error_counter / (cuda_array.rows * cuda_array.cols);
+    float error_rate = static_cast<float>(error_counter) / static_cast<float>(cuda_array.rows * cuda_array.cols);
 
     // Print the error count
     cout << custom_msg << endl;

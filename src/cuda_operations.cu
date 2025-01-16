@@ -39,3 +39,20 @@ __global__ void sigmoidKernel(const float* input, float* output, const int rows,
         output[index] = 1.0f / (1.0f + expf(-input[index]));  // Sigmoid function
     }
 }
+
+__global__ void sigmoidDerivativeKernel(const float* input, float* output, const int rows, const int cols) {
+    
+    // Compute the global thread index for both x and y dimensions
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    // Check if the thread is within bounds
+    if (idx < cols && idy < rows) {
+        int index = idy * cols + idx;  // Convert 2D index to 1D
+        output[index] = _sigmoid(input[index]) * (1 - _sigmoid(input[index]));
+    }
+}
+
+float _sigmoid(float x) {
+    return 1.0f / (1.0f + expf(-x));
+}

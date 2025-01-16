@@ -39,4 +39,6 @@ void checkCudaComputation(CudaMatrixMemory &cuda_array, xt::xarray<float> &refer
     cout << custom_msg << endl;
     cout << "The number of error +- epsilon for this computation is: " << error_counter << endl;
     cout << "The rate of error +- epsilon for this computation is: " << error_rate << endl; 
+
+    delete[] carray;
 }

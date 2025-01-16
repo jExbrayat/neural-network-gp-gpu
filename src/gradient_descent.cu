@@ -135,6 +135,13 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(lo.device_ptr, b.device_ptr, lo.device_ptr, lo.rows, lo.cols);
         sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(lo.device_ptr, la_next.device_ptr, la_next.rows, la_next.cols);
 
+        // Perform computation on CPU
+        xarray<float> CPU_lo = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
+        xarray<float> CPU_la_next = sigmoid(CPU_lo); 
+        // Check computation
+        checkCudaComputation(lo, CPU_lo, 0.1, "Check computation of layer OUTPUT of l = " + to_string(l));
+        checkCudaComputation(la_next, CPU_la_next, 0.1, "Check computation of layer next ACTIVATION of l = " + to_string(l));
+
         // Copy back the computations into the base pipeline
         float* w_host = w.allocAndSend2Host();
         float* b_host = b.allocAndSend2Host();
@@ -145,11 +152,16 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         // Assign to base pipeline
         // ArrayHandler lo_xt;
         // lo_xt.cast_carray(lo_host, lo.rows, lo.cols);
-        // layer_outputs[l] = lo_xt.xtarray;
+        layer_outputs[l] = CPU_lo;
         
         // ArrayHandler la_next_xt;
         // la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
-        // layer_activations[l + 1] = la_next_xt.xtarray;  
+        layer_activations[l + 1] = CPU_la_next;  
+        
+        cout << "CPU_lo MATRIX" << endl;
+        cout << CPU_lo << endl; 
+
+        print_carray(lo_host, lo.rows, lo.cols, "CUDA_lo_MATRIX");
 
         delete[] w_host;
         delete[] b_host;
@@ -158,11 +170,6 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         delete[] la_next_host;
     }
 
-
-    for (size_t l = 0; l < num_layers; l++) {
-        layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
-        layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in utils/utils.cpp
-    }
 }
 
 void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &current_batch_size, const float &learning_rate) {

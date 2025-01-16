@@ -31,6 +31,10 @@ void CudaMatrixMemory::sendMatrix2Device(const float *carray) {
     throwErr.throwError("cudaMemcpy failed: ");
 }
 
+/**
+ * @brief Allocate host memory into host_ptr and perform cudaMemcpy from device to host.
+ * The user need to free the allocated memory in returned host_ptr !
+ */
 float* CudaMatrixMemory::allocAndSend2Host() {
     // Allocate memory for the host
     float* host_ptr = new float[rows * cols]; // Use new[] for proper cleanup with delete[]

@@ -17,31 +17,31 @@ class GradientDescent
 {
 public:
     // Constructor
-    GradientDescent(const xarray<double>& x_train, const xarray<double>& y_train, 
-                    vector<xarray<double>>& weights, vector<xarray<double>>& biases, const int batch_size);
+    GradientDescent(const xarray<float>& x_train, const xarray<float>& y_train, 
+                    vector<xarray<float>>& weights, vector<xarray<float>>& biases, const int batch_size);
     
     // Method to start training
     void train(const unsigned int& epochs, const float& learning_rate);
 
     // Class members
-    vector<xarray<double>> weights;   // Weights of the network
-    vector<xarray<double>> biases;    // Biases of the network
-    vector<double> loss_history;      // History of loss over epochs
-    xarray<double> x_train;           // Training data (inputs)
-    xarray<double> y_train;           // Labels corresponding to the training data
+    vector<xarray<float>> weights;   // Weights of the network
+    vector<xarray<float>> biases;    // Biases of the network
+    vector<float> loss_history;      // History of loss over epochs
+    xarray<float> x_train;           // Training data (inputs)
+    xarray<float> y_train;           // Labels corresponding to the training data
     const int batch_size;
 
 private:
     // Forward pass through the network
-    void forward_pass(const xarray<double>& x_batch);
+    void forward_pass(const xarray<float>& x_batch);
 
     // Backward pass to calculate gradients and update weights/biases
-    void backward_pass(const xarray<double>& y_batch, const int& current_batch_size, const float& learning_rate);
+    void backward_pass(const xarray<float>& y_batch, const int& current_batch_size, const float& learning_rate);
 
     // Class members for layer outputs and activations
     int num_layers;                   // Number of layers in the network
-    vector<xarray<double>> layer_outputs;   // Layer outputs (linear activations)
-    vector<xarray<double>> layer_activations;   // Layer activations after applying activation function
+    vector<xarray<float>> layer_outputs;   // Layer outputs (linear activations)
+    vector<xarray<float>> layer_activations;   // Layer activations after applying activation function
 
     // Class members for cuda
     vector<CudaMatrixMemory> cuda_weights; 

@@ -8,24 +8,20 @@
 using namespace std;
 using namespace xt;
 
-xarray<double> sigmoid(xarray<double> x)
+xarray<float> sigmoid(xarray<float> x)
 {
     return 1 / (1 + xt::exp(-x));
 }
 
-xarray<double> sigmoid_derivative(xarray<double> x)
+xarray<float> sigmoid_derivative(xarray<float> x)
 {
     return sigmoid(x) * (1 - sigmoid(x));
 }
 
-template <typename DoubleOrFloat>
-void print_shapes(xarray<DoubleOrFloat> &array, string msg) {
+void print_shapes(xarray<float> &array, string msg) {
     cout << msg << endl;
     cout << array.shape(0) << ", " << array.shape(1) << endl;
 }
-
-template void print_shapes<float>(xt::xarray<float>& array, string msg);
-template void print_shapes<double>(xt::xarray<double>& array, string msg);
 
 void print_carray(float *carray, int rows, int cols, string msg) {
     // Print using row major matrix definition rule
@@ -73,7 +69,7 @@ xarray<uint8_t> transform_mnist_images(vector<vector<uint8_t>> &x, std::array<si
     return x_tensor;
 }
 
-void scale_data(xarray<double> &x) {
+void scale_data(xarray<float> &x) {
     // Scale data in [0; 1]
     x = (x - xt::amin(x)()) / (xt::amax(x)() - xt::amin(x)());
 }
@@ -88,7 +84,7 @@ ArrayHandler::ArrayHandler() {
     carray = nullptr;
 };
 
-void ArrayHandler::cast_xtarray(const xarray<double> &xtarray) {
+void ArrayHandler::cast_xtarray(const xarray<float> &xtarray) {
     int rows = xtarray.shape(0);
     int cols = xtarray.shape(1);
 
@@ -113,12 +109,12 @@ void ArrayHandler::cast_carray(const float* carray, const int rows, const int co
     this->cols = cols;
     
     // Allocate memory for xtarray
-    xtarray = xt::empty<double>({rows, cols});
+    xtarray = xt::empty<float>({rows, cols});
 
     // Copy values from carray to xtarray
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            xtarray(i, j) = static_cast<double>(carray[i * cols + j]);
+            xtarray(i, j) = static_cast<float>(carray[i * cols + j]);
         }
     }
 }

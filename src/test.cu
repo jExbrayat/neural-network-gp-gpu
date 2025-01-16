@@ -20,7 +20,7 @@ int main() {
     xarray<float> axt = xarray<float>{{2, 2, 2}, {1, 1, 1}};
     xarray<float> axt_error = xarray<float>{{2, 2, 2}, {9, 9, 9}};
     xarray<float> bxt = xarray<float>{{1, 1}, {1, 1}, {1, 1}};
-    xarray<double> cxt = xarray<double>{{1.0, 1.0}};
+    xarray<float> cxt = xarray<float>{{1.0, 1.0}};
     cxt.reshape({2, 1});
     print_shapes(cxt, "cxt shape: ");
     ArrayHandler ah;

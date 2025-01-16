@@ -24,3 +24,17 @@ Epoch: 0
    Batch: 7 / 9
    Batch: 8 / 9
    MSE: 0.205711
+
+Give the following since we use float instead of double: 
+Epoch: 0
+   Batch: 0 / 9
+   Batch: 1 / 9
+   Batch: 2 / 9
+   Batch: 3 / 9
+   Batch: 4 / 9
+   Batch: 5 / 9
+   Batch: 6 / 9
+   Batch: 7 / 9
+   Batch: 8 / 9
+   MSE: 0.165068
+

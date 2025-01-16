@@ -14,7 +14,7 @@ using namespace xt;
 
 // Define constructor
 // Just init class members
-GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<double> &y_train, vector<xarray<double>> &weights, vector<xarray<double>> &biases, const int batch_size) : x_train(x_train), y_train(y_train), weights(weights), biases(biases), batch_size(batch_size) {
+GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<float> &y_train, vector<xarray<float>> &weights, vector<xarray<float>> &biases, const int batch_size) : x_train(x_train), y_train(y_train), weights(weights), biases(biases), batch_size(batch_size) {
     num_layers = weights.size(); 
     layer_outputs.resize(num_layers);
     layer_activations.resize(num_layers + 1);
@@ -85,7 +85,7 @@ GradientDescent::GradientDescent(const xarray<double> &x_train, const xarray<dou
 
 // Write gradient descent methods
 
-void GradientDescent::forward_pass(const xarray<double> &x_batch) {
+void GradientDescent::forward_pass(const xarray<float> &x_batch) {
 
     layer_activations[0] = xt::transpose(x_batch);
     
@@ -134,7 +134,7 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
         matrixMulKernel<<<matMulGrid.grid, matMulGrid.threads>>>(w.device_ptr, la.device_ptr, lo.device_ptr, w.rows, w.cols, la.cols); // w * la, write the result in lo
         addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(lo.device_ptr, b.device_ptr, lo.device_ptr, lo.rows, lo.cols);
         sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(lo.device_ptr, la_next.device_ptr, la_next.rows, la_next.cols);
- 
+
         // Copy back the computations into the base pipeline
         float* w_host = w.allocAndSend2Host();
         float* b_host = b.allocAndSend2Host();
@@ -143,13 +143,13 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
         float* la_next_host = la_next.allocAndSend2Host();
 
         // Assign to base pipeline
-        ArrayHandler lo_xt;
-        lo_xt.cast_carray(lo_host, lo.rows, lo.cols);
-        layer_outputs[l] = lo_xt.xtarray;
+        // ArrayHandler lo_xt;
+        // lo_xt.cast_carray(lo_host, lo.rows, lo.cols);
+        // layer_outputs[l] = lo_xt.xtarray;
         
-        ArrayHandler la_next_xt;
-        la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
-        layer_activations[l + 1] = la_next_xt.xtarray;  
+        // ArrayHandler la_next_xt;
+        // la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
+        // layer_activations[l + 1] = la_next_xt.xtarray;  
 
         delete[] w_host;
         delete[] b_host;
@@ -159,18 +159,18 @@ void GradientDescent::forward_pass(const xarray<double> &x_batch) {
     }
 
 
-    // for (size_t l = 0; l < num_layers; l++) {
-    //     layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
-    //     layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in utils/utils.cpp
-    // }
+    for (size_t l = 0; l < num_layers; l++) {
+        layer_outputs[l] = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
+        layer_activations[l + 1] = sigmoid(layer_outputs[l]); // sigmoid is defined in utils/utils.cpp
+    }
 }
 
-void GradientDescent::backward_pass(const xarray<double> &y_batch, const int &current_batch_size, const float &learning_rate) {
+void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &current_batch_size, const float &learning_rate) {
     
-    vector<xarray<double>> deltas(num_layers);
+    vector<xarray<float>> deltas(num_layers);
 
     // Init delta vector corresponding to the last layer
-    xarray<double> &last_activation = layer_activations[num_layers];
+    xarray<float> &last_activation = layer_activations[num_layers];
     deltas[num_layers - 1] = (last_activation - xt::transpose(y_batch)) * sigmoid_derivative(layer_outputs[num_layers - 1]);
 
     for (int l = num_layers - 2; l >= 0; l--) {
@@ -179,8 +179,8 @@ void GradientDescent::backward_pass(const xarray<double> &y_batch, const int &cu
 
     // Update weights and biases
     for (int l = 0; l < num_layers; l++) {
-        xarray<double> gradient_w = xt::linalg::dot(deltas[l], xt::transpose(layer_activations[l])) / current_batch_size; // Batch size may vary, at the end of epoch
-        xarray<double> gradient_b = xt::mean(deltas[l], {1});
+        xarray<float> gradient_w = xt::linalg::dot(deltas[l], xt::transpose(layer_activations[l])) / current_batch_size; // Batch size may vary, at the end of epoch
+        xarray<float> gradient_b = xt::mean(deltas[l], {1});
         gradient_b = gradient_b.reshape({gradient_b.size(), 1});
 
         weights[l] -= learning_rate * gradient_w;
@@ -209,19 +209,19 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
 
             // Compute the current batch size, as defined normally but smaller if at the end of epoch
             int current_batch_size = batch_size;
-            xarray<double> x_batch = xt::view(x_train, range(batch_start, batch_start + current_batch_size), all());
-            xarray<double> y_batch = xt::view(y_train, range(batch_start, batch_start + current_batch_size), all());
+            xarray<float> x_batch = xt::view(x_train, range(batch_start, batch_start + current_batch_size), all());
+            xarray<float> y_batch = xt::view(y_train, range(batch_start, batch_start + current_batch_size), all());
 
             // Perform the forward pass
             forward_pass(x_batch); // Modify the layer_activations and layer_outputs
-            xarray<double> &last_activation = layer_activations[num_layers];
+            xarray<float> &last_activation = layer_activations[num_layers];
 
             // Perform the backward pass
             backward_pass(y_batch,  current_batch_size, learning_rate); // Modify the weights and biases
  
             // Compute the loss for the current batch
-            xarray<double> squared_error = xt::pow(last_activation - xt::transpose(y_batch), 2); // Error for each pixel of each observation
-            xarray<double> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
+            xarray<float> squared_error = xt::pow(last_activation - xt::transpose(y_batch), 2); // Error for each pixel of each observation
+            xarray<float> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
             epoch_mse += xt::sum(observation_mse)() / dataset_size;
         }
         cout << "   MSE: " << epoch_mse << endl;

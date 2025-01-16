@@ -49,14 +49,14 @@ int main(int argc, char *argv[]) {
     float train_test_split = config["train_test_split"];
 
     // Load dataset
-    xt::xarray<double> x_train, y_train, x_test, y_test;
+    xt::xarray<float> x_train, y_train, x_test, y_test;
     if (dataset_path == "mnist") {
         std::tie(x_train, y_train, x_test, y_test) = Autoencoder::load_mnist_dataset(train_test_split);
 
     } else {
         ifstream infile(dataset_path);
         check_iostream_state(infile, dataset_path);
-        xt::xarray<double> dataset = xt::load_csv<double>(infile);
+        xt::xarray<float> dataset = xt::load_csv<float>(infile);
         infile.close();
 
         int train_test_split_idx = round(train_test_split * dataset.shape(0));
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     // Predict test set and save result if desired
     if (!config["pred_save_path"].is_null()) {
         // Predict
-        xt:xarray<double> y_pred = nn.predict(x_train);
+        xt:xarray<float> y_pred = nn.predict(x_train);
         // Save
         string pred_save_path = config["pred_save_path"];
         std::ofstream out_file (pred_save_path);

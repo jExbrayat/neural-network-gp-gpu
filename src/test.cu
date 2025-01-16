@@ -7,6 +7,7 @@
 #include "cuda_operations.cuh"
 #include <xtensor/xarray.hpp>
 #include <xtensor/xview.hpp>
+#include <xtensor-blas/xlinalg.hpp>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <xtensor/xio.hpp>
@@ -17,8 +18,10 @@ using namespace std;
 int main() {
 
     xarray<float> axt = xarray<float>{{2, 2, 2}, {1, 1, 1}};
+    xarray<float> axt_error = xarray<float>{{2, 2, 2}, {9, 9, 9}};
     xarray<float> bxt = xarray<float>{{1, 1}, {1, 1}, {1, 1}};
     xarray<double> cxt = xarray<double>{{1.0, 1.0}};
+    cxt.reshape({2, 1});
     print_shapes(cxt, "cxt shape: ");
     ArrayHandler ah;
     ah.cast_xtarray(axt);
@@ -48,7 +51,7 @@ int main() {
     sigmoidGrid.setKernelGrid(16, 16, a.rows, b.cols);
 
     matrixMulKernel<<<matMulGrid.grid, matMulGrid.threads>>>(a.device_ptr, b.device_ptr, d.device_ptr, a.rows, a.cols, b.cols); // w * la, write the result in lo
-    addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(d.device_ptr, c.device_ptr, d.device_ptr, c.rows, c.cols);
+    addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(d.device_ptr, c.device_ptr, d.device_ptr, d.rows, d.cols);
     sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(d.device_ptr, d.device_ptr, d.rows, d.cols);
 
     float *resa = a.allocAndSend2Host();
@@ -56,12 +59,18 @@ int main() {
     float *resc = c.allocAndSend2Host();
     float *resd = d.allocAndSend2Host();
 
+    // Perform computation with xtensor
+    xarray<float> xtres = sigmoid(xt::linalg::dot(axt, bxt) + cxt);
+    
+    // Check computation
+    checkCudaComputation(d, xtres, 0.1, "CHECK CUDA COMPUTATION: ");
+
+    // Print results
     print_carray(resd, d.rows, d.cols, "resd: ");
-
-    ArrayHandler h_resd;
-    h_resd.cast_carray(resd, d.rows, d.cols);
-    cout << h_resd.xtarray << endl;
-
+    
+    cout << "xtres: " << endl;
+    cout << xtres << endl;
+    
     cout << "end of tests" << endl;
     return 0;
 }

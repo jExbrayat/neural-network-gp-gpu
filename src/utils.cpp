@@ -18,10 +18,14 @@ xarray<double> sigmoid_derivative(xarray<double> x)
     return sigmoid(x) * (1 - sigmoid(x));
 }
 
-void print_shapes(xarray<double> &array, string msg) {
+template <typename DoubleOrFloat>
+void print_shapes(xarray<DoubleOrFloat> &array, string msg) {
     cout << msg << endl;
     cout << array.shape(0) << ", " << array.shape(1) << endl;
 }
+
+template void print_shapes<float>(xt::xarray<float>& array, string msg);
+template void print_shapes<double>(xt::xarray<double>& array, string msg);
 
 void print_carray(float *carray, int rows, int cols, string msg) {
     // Print using row major matrix definition rule

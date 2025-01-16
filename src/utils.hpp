@@ -10,7 +10,8 @@ using namespace xt;
 
 xarray<double> sigmoid(xarray<double> x);
 xarray<double> sigmoid_derivative(xarray<double> x);
-void print_shapes(xarray<double> &array, string msg);
+template <typename DoubleOrFloat>
+void print_shapes(xarray<DoubleOrFloat> &array, string msg);
 void print_carray(float *carray, int rows, int cols, string msg);
 nlohmann::json read_json(const string &config_file_path);
 void scale_data(xarray<double> &x);

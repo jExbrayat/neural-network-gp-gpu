@@ -18,13 +18,13 @@ __global__ void matrixMulKernel(const float* A, const float* B, float* C, const 
 
 __global__ void addBiasToMatrixKernel(const float* matrix, const float* biases, float* result, int rows, int cols) {
     // Compute the global thread index for both x and y dimensions
-    int idx = blockIdx.x * blockDim.x + threadIdx.x; // Row index in result matrix
-    int idy = blockIdx.y * blockDim.y + threadIdx.y; // Column index in result matrix
+    int idx = blockIdx.x * blockDim.x + threadIdx.x; // Column index
+    int idy = blockIdx.y * blockDim.y + threadIdx.y; // Row index
 
     // Check if the thread is within bounds
-    if (idx < rows && idy < cols) {
+    if (idx < cols && idy < rows) {
         // Add the bias to each element in the column
-        result[idx * cols + idy] = matrix[idx * cols + idy] + biases[idy];
+        result[idy * cols + idx] = matrix[idy * cols + idx] + biases[idy];
     }
 }
 

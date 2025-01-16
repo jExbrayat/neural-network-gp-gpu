@@ -139,8 +139,7 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         xarray<float> CPU_lo = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
         xarray<float> CPU_la_next = sigmoid(CPU_lo); 
         // Check computation
-        checkCudaComputation(lo, CPU_lo, 0.1, "Check computation of layer OUTPUT of l = " + to_string(l));
-        checkCudaComputation(la_next, CPU_la_next, 0.1, "Check computation of layer next ACTIVATION of l = " + to_string(l));
+        checkCudaComputation(la_next, CPU_la_next, 0.01, "Check computation of LA NEXT of l = " + to_string(l));
 
         // Copy back the computations into the base pipeline
         float* w_host = w.allocAndSend2Host();
@@ -157,11 +156,7 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         // ArrayHandler la_next_xt;
         // la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
         layer_activations[l + 1] = CPU_la_next;  
-        
-        cout << "CPU_lo MATRIX" << endl;
-        cout << CPU_lo << endl; 
 
-        print_carray(lo_host, lo.rows, lo.cols, "CUDA_lo_MATRIX");
 
         delete[] w_host;
         delete[] b_host;

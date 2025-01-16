@@ -149,13 +149,13 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         float* la_next_host = la_next.allocAndSend2Host();
 
         // Assign to base pipeline
-        // ArrayHandler lo_xt;
-        // lo_xt.cast_carray(lo_host, lo.rows, lo.cols);
-        layer_outputs[l] = CPU_lo;
+        ArrayHandler lo_xt;
+        lo_xt.cast_carray(lo_host, lo.rows, lo.cols);
+        layer_outputs[l] = lo_xt.xtarray;
         
-        // ArrayHandler la_next_xt;
-        // la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
-        layer_activations[l + 1] = CPU_la_next;  
+        ArrayHandler la_next_xt;
+        la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
+        layer_activations[l + 1] = la_next_xt.xtarray;  
 
 
         delete[] w_host;

@@ -169,43 +169,14 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
 
 void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &current_batch_size, const float &learning_rate) {
     
-    // vector<xarray<float>> deltas(num_layers);
+    vector<xarray<float>> deltas(num_layers);
 
-    // // Init delta vector corresponding to the last layer
-    // xarray<float> &last_activation = layer_activations[num_layers];
-    // deltas[num_layers - 1] = (last_activation - xt::transpose(y_batch)) * sigmoid_derivative(layer_outputs[num_layers - 1]);
-    
+    // Init delta vector corresponding to the last layer
+    xarray<float> &last_activation = layer_activations[num_layers];
+    deltas[num_layers - 1] = (last_activation - xt::transpose(y_batch)) * sigmoid_derivative(layer_outputs[num_layers - 1]);
 
-    // for (int l = num_layers - 2; l >= 0; l--) {
-    //     deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigmoid_derivative(layer_outputs[l]);
-    // }
-
-    // Compute delta vectors
-        
-    // Prepare data
-    CudaMatrixMemory cmm_y_batchT(y_batch.shape(1), y_batch.shape(0));
-    ArrayHandler y_batchT;
-    y_batchT.cast_xtarray(xt::transpose(y_batch));
-    cmm_y_batchT.sendMatrix2Device(y_batchT.carray);
-
-    CudaGrid InitDelta;
-    InitDelta.setKernelGrid(16, 16, cuda_deltas[0].rows, cuda_deltas[0].cols);
-
-    // Init delta vectors
-    addMatrixToMatrix<<<InitDelta.grid, InitDelta.threads>>>(cuda_layer_activations[num_layers].device_ptr, cmm_y_batchT.device_ptr, -1.f, cuda_deltas[0].device_ptr, cuda_deltas[0].rows, cuda_deltas[0].cols);
-    sigmoidDerivativeKernel<<<InitDelta.grid, InitDelta.threads>>>(cuda_layer_outputs[num_layers - 1].device_ptr, cuda_layer_outputs[num_layers - 1].device_ptr, cuda_layer_outputs[num_layers - 1].rows, cuda_layer_outputs[num_layers - 1].cols);
-    matMulElementWise<<<InitDelta.grid, InitDelta.threads>>>(cuda_deltas[0].device_ptr, cuda_layer_outputs[num_layers - 1].device_ptr, cuda_deltas[0].device_ptr, cuda_deltas[0].rows, cuda_deltas[0].cols);
-
-    // Compute the remaining vectors
-    for (size_t l = 1; l < num_layers; l++) {
-        
-        CudaGrid Transpose;
-        Transpose.setKernelGrid(16, 16, cuda_weights[num_layers - l].rows, cuda_weights[num_layers - l].cols);        
-        CudaGrid ComputeDelta;
-        ComputeDelta.setKernelGrid(16, 16, cuda_deltas[l].rows, cuda_deltas[l].cols);
-
-        transposeKernel<<<Transpose.grid, Transpose.threads>>>(cuda_weights[num_layers - l].device_ptr, cuda_deltas[l].device_ptr, cuda_deltas[l].rows, cuda_deltas[l].cols);
-        matrixMulKernel<<<ComputeDelta.grid, ComputeDelta.thread>>>(cuda_deltas[l].device_ptr, cuda_deltas[l - 1])
+    for (int l = num_layers - 2; l >= 0; l--) {
+        deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigmoid_derivative(layer_outputs[l]);
     }
 
     // Update weights and biases

@@ -81,3 +81,15 @@ __global__ void transposeKernel(const float* input, float* output, const int row
         output[output_index] = input[input_index];        
     }
 }
+
+__global__ void matMulElementWise(const float *A, const float *B, float *output, const int rows, const int cols) {
+    
+    // Compute the global thread index for both x and y dimensions
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (idx < cols && idy < rows) {
+        output[idy * cols + idx] = A[idy * cols + idx] * B[idy * cols + idx];        
+    }
+}
+

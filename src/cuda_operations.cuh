@@ -13,4 +13,6 @@ __global__ void sigmoidDerivativeKernel(const float* input, float* output, const
 
 __global__ void transposeKernel(const float* input, float* output, const int rows, const int cols);
 
+__global__ void matMulElementWise(const float *A, const float *B, float *output, const int rows, const int cols);
+
 #endif

@@ -8,6 +8,7 @@
 #include "cuda_utils.cuh"
 #include "debugging_utils.hpp"
 #include "cuda_operations.cuh"
+#include "cuda_members.cuh"
 
 using namespace std;
 using namespace xt;
@@ -19,6 +20,8 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
     layer_outputs.resize(num_layers);
     layer_activations.resize(num_layers + 1);
 
+    CudaMemberVectors& CMV = CudaMembers; 
+
     // Initialize cuda arrays (allocate memory)
     
     // Init first layer input, which is the transpose of x_batch
@@ -27,14 +30,14 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
     int lacols = batch_size;
     CudaMatrixMemory InitLayerActivation(larows, lacols);
     InitLayerActivation.allocateCudaMemory();
-    cuda_layer_activations.push_back(InitLayerActivation);
+    CMV.layer_activations.push_back(InitLayerActivation);
     
     // Init first delta i.e. the delta tensor of the last layer
     int init_deltarows = x_train.shape(1); // nb features
     int init_deltacols = batch_size;
     CudaMatrixMemory InitLayerDelta(init_deltarows, init_deltacols);
     InitLayerDelta.allocateCudaMemory();
-    cuda_deltas.push_back(InitLayerDelta);
+    CMV.deltas.push_back(InitLayerDelta);
 
     for (size_t l = 0; l < num_layers; l++) {
         // Weights
@@ -42,21 +45,21 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
         int wcols = weights[l].shape(1);
         CudaMatrixMemory LayerWeights(wrows, wcols);
         LayerWeights.allocateCudaMemory();
-        cuda_weights.push_back(LayerWeights);
+        CMV.weights.push_back(LayerWeights);
 
         // Biases
         int brows = biases[l].shape(0);
         int bcols = biases[l].shape(1);
         CudaMatrixMemory LayerBiases(brows, bcols);
         LayerBiases.allocateCudaMemory();
-        cuda_biases.push_back(LayerBiases);
+        CMV.biases.push_back(LayerBiases);
 
         // Layer output = W_l * LA_l + B_l
         int lorows = wrows;
-        int locols = cuda_layer_activations[l].cols;
+        int locols = CMV.layer_activations[l].cols;
         CudaMatrixMemory LayerOutput(lorows, locols);
         LayerOutput.allocateCudaMemory();
-        cuda_layer_outputs.push_back(LayerOutput);
+        CMV.layer_outputs.push_back(LayerOutput);
 
         // Layer activation = sigmoid( LO_{l-1} )
         // We are pushing the element l + 1 of the vector now (because of the initialization before the loop)
@@ -64,14 +67,14 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
         int lacols = locols;
         CudaMatrixMemory LayerActivation(larows, lacols);
         LayerActivation.allocateCudaMemory();
-        cuda_layer_activations.push_back(LayerActivation);
+        CMV.layer_activations.push_back(LayerActivation);
 
         if (l > 0) { // Otherwise do nothing since the first value is initialized already
             int deltarows = weights[num_layers - l].shape(1);
-            int deltacols = cuda_deltas[num_layers - l].cols;
+            int deltacols = CMV.deltas[num_layers - l].cols;
             CudaMatrixMemory LayerDelta(deltarows, deltacols);
             LayerDelta.allocateCudaMemory();
-            cuda_deltas.push_back(LayerDelta);
+            CMV.deltas.push_back(LayerDelta);
         }
 
         printCudaMatrixShapes(LayerWeights, "LayerWeights");
@@ -93,33 +96,35 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
     ArrayHandler XBATCH_T;
     XBATCH_T.cast_xtarray(layer_activations[0]);
 
-    // Copy XBATCH_T into cuda_layer_activations[0] i.e. the network's input
-    CudaMatrixMemory& network_input = cuda_layer_activations[0];
+    CudaMemberVectors& CMV = CudaMembers; 
+
+    // Copy XBATCH_T into CMV.layer_activations[0] i.e. the network's input
+    CudaMatrixMemory& network_input = CMV.layer_activations[0];
     network_input.sendMatrix2Device(XBATCH_T.carray);
     
     // Perform computations with cuda
     for (size_t l = 0; l < num_layers; l++) {
-        CudaMatrixMemory& w = cuda_weights[l];
+        CudaMatrixMemory& w = CMV.weights[l];
         ArrayHandler get_weights;
         get_weights.cast_xtarray(weights[l]);
         w.sendMatrix2Device(get_weights.carray);
         
-        CudaMatrixMemory& b = cuda_biases[l];
+        CudaMatrixMemory& b = CMV.biases[l];
         ArrayHandler get_biases;
         get_biases.cast_xtarray(biases[l]);
         b.sendMatrix2Device(get_biases.carray);
 
-        CudaMatrixMemory& lo = cuda_layer_outputs[l];
+        CudaMatrixMemory& lo = CMV.layer_outputs[l];
         ArrayHandler get_lo;
         get_lo.cast_xtarray(layer_outputs[l]);
         lo.sendMatrix2Device(get_lo.carray);
 
-        CudaMatrixMemory& la = cuda_layer_activations[l];
+        CudaMatrixMemory& la = CMV.layer_activations[l];
         ArrayHandler get_la;
         get_la.cast_xtarray(layer_activations[l]);
         la.sendMatrix2Device(get_la.carray);
 
-        CudaMatrixMemory& la_next = cuda_layer_activations[l + 1];
+        CudaMatrixMemory& la_next = CMV.layer_activations[l + 1];
         ArrayHandler get_la_next;
         get_la_next.cast_xtarray(layer_activations[l + 1]);
         la_next.sendMatrix2Device(get_la_next.carray);

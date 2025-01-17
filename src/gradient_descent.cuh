@@ -9,6 +9,7 @@
 #include <fstream>
 #include <optional>
 #include "cuda_utils.cuh"
+#include "cuda_members.cuh"
 
 using namespace std;
 using namespace xt;
@@ -43,13 +44,7 @@ private:
     vector<xarray<float>> layer_outputs;   // Layer outputs (linear activations)
     vector<xarray<float>> layer_activations;   // Layer activations after applying activation function
 
-    // Class members for cuda
-    vector<CudaMatrixMemory> cuda_weights; 
-    vector<CudaMatrixMemory> cuda_biases;
-    vector<CudaMatrixMemory> cuda_layer_outputs;  
-    vector<CudaMatrixMemory> cuda_layer_activations; 
-
-    vector<CudaMatrixMemory> cuda_deltas;
+    CudaMemberVectors CudaMembers;
 };
 
 #endif // GRADIENT_DESCENT_CUH

@@ -53,6 +53,10 @@ __global__ void sigmoidKernel(const float* input, float* output, const int rows,
     }
 }
 
+__device__ float _sigmoid(float x) {
+    return 1.0f / (1.0f + expf(-x));
+}
+
 __global__ void sigmoidDerivativeKernel(const float* input, float* output, const int rows, const int cols) {
     
     // Compute the global thread index for both x and y dimensions
@@ -66,9 +70,6 @@ __global__ void sigmoidDerivativeKernel(const float* input, float* output, const
     }
 }
 
-float _sigmoid(float x) {
-    return 1.0f / (1.0f + expf(-x));
-}
 
 __global__ void transposeKernel(const float* input, float* output, const int rows, const int cols) {
     // Compute the global thread index for both x and y dimensions
@@ -93,3 +94,27 @@ __global__ void matMulElementWise(const float *A, const float *B, float *output,
     }
 }
 
+__global__ void matrixScalarKernel(const float *matrix, float* output, const float scalar, const int rows, const int cols) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (idx < cols && idy < rows) {
+        output[idy * cols + idx] = matrix[idy * cols + idx] * scalar;        
+    }
+}
+
+/**
+ * @brief Compute mean across columns, i.e. resulting matrix has a unique column.
+ * The kernel should be launched with a unidimensional grid (e,g, (0, 256)) since the grid navigates through columns only.
+ */
+__global__ void computeMeanKernel(const float *matrix, float * output, const int rows, const int cols) {
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (idy < rows) {
+        float sum = 0.f;
+        for (int k = 0; k < cols; k++) {
+            sum += matrix[idy * cols + k];
+        }
+        output[idy] = sum / cols;
+    }
+}

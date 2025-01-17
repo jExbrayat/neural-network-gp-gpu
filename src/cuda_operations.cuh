@@ -15,4 +15,8 @@ __global__ void transposeKernel(const float* input, float* output, const int row
 
 __global__ void matMulElementWise(const float *A, const float *B, float *output, const int rows, const int cols);
 
+__global__ void matrixScalarKernel(const float *matrix, float* output, const float scalar, const int rows, const int cols);
+
+__global__ void computeMeanKernel(const float *matrix, float * output, const int rows, const int cols);
+
 #endif

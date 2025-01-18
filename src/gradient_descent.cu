@@ -47,12 +47,22 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
         LayerWeights.allocateCudaMemory();
         CMV.weights.push_back(LayerWeights);
 
+        // Weights gradients
+        CudaMatrixMemory LayerWG(wrows, wcols);
+        LayerWG.allocateCudaMemory();
+        CMV.grad_weights.push_back(LayerWG);
+
         // Biases
         int brows = biases[l].shape(0);
         int bcols = biases[l].shape(1);
         CudaMatrixMemory LayerBiases(brows, bcols);
         LayerBiases.allocateCudaMemory();
         CMV.biases.push_back(LayerBiases);
+
+        // Biases gradients
+        CudaMatrixMemory LayerBG(brows, bcols);
+        LayerBG.allocateCudaMemory();
+        CMV.grad_biases.push_back(LayerBG);
 
         // Layer output = W_l * LA_l + B_l
         int lorows = wrows;
@@ -184,6 +194,70 @@ void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &cur
         deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigmoid_derivative(layer_outputs[l]);
     }
 
+    // Compute delta vectors
+        
+    // Transpose y_batch and send to device
+    xarray<float> refxt_ybatchT = xt::transpose(y_batch);
+    ArrayHandler y_batchT;
+    y_batchT.cast_xtarray(refxt_ybatchT);
+    
+    CudaMatrixMemory cmm_y_batchT(y_batch.shape(1), y_batch.shape(0));
+    cmm_y_batchT.allocateCudaMemory(); 
+    cmm_y_batchT.sendMatrix2Device(y_batchT.carray);
+    
+    checkCudaComputation(cmm_y_batchT, refxt_ybatchT, 0.001, "Check transposition of y_batch: ");
+
+    // Create reference for easier reading
+    CudaMemberVectors &CMV = CudaMembers;
+    CudaMatrixMemory &delta = CMV.deltas[0];
+    CudaMatrixMemory &lo = CMV.layer_outputs[num_layers - 1];
+    CudaMatrixMemory &la_next = CMV.layer_activations[num_layers];
+
+    // Init delta vectors
+
+    // Create grid for cuda
+    CudaGrid InitDelta;
+    InitDelta.setKernelGrid(16, 16, delta.rows, delta.cols);
+    
+    // Perform soustraction. Store resutl in delta.device_ptr
+    addMatrixToMatrix<<<InitDelta.grid, InitDelta.threads>>>(la_next.device_ptr, cmm_y_batchT.device_ptr, -1.f, delta.device_ptr, delta.rows, delta.cols);
+ 
+    // Store result in lo which is not a problem because this data can be altered
+    sigmoidDerivativeKernel<<<InitDelta.grid, InitDelta.threads>>>(lo.device_ptr, lo.device_ptr, lo.rows, lo.cols);
+ 
+    // Store the final result in delta.device_ptr
+    matMulElementWise<<<InitDelta.grid, InitDelta.threads>>>(delta.device_ptr, lo.device_ptr, delta.device_ptr, delta.rows, delta.cols);
+
+    checkCudaComputation(delta, deltas[num_layers - 1], 0.001, "Check computation of the init of deltas: ");
+
+
+    // // Compute remaining delta vectors
+    // for (size_t l = 1; l < num_layers; l++) {
+
+    //     // Create references for easier reading
+    //     CudaMatrixMemory &delta = CMV.deltas[l];
+    //     CudaMatrixMemory &delta_previous = CMV.deltas[l - 1];
+    //     CudaMatrixMemory &w = CMV.weights[num_layers - l];
+    //     CudaMatrixMemory &lo = CMV.layer_outputs[num_layers - 1 - l]; 
+    //     CudaMatrixMemory &wg = CMV.grad_weights[num_layers -l];
+        
+    //     // Create grids for cuda
+    //     CudaGrid Transpose;
+    //     CudaGrid ComputeDelta;
+    //     Transpose.setKernelGrid(16, 16, w.rows, w.cols);        
+    //     ComputeDelta.setKernelGrid(16, 16, delta.rows, delta.cols);
+
+    //     // Compute transpose weights matrix. Store the result in wg because it is allocated already and can be altered without consequence
+    //     transposeKernel<<<Transpose.grid, Transpose.threads>>>(w.device_ptr, wg.device_ptr, w.rows, w.cols);
+
+    //     // Compute the dot product
+    //     matrixMulKernel<<<ComputeDelta.grid, ComputeDelta.threads>>>(resT, delta_previous.device_ptr, delta.device_ptr, w.cols, w.rows, delta_previous.cols);
+        
+    //     sigmoidDerivativeKernel<<<ComputeDelta.grid, ComputeDelta.threads>>>(lo.device_ptr, lo.device_ptr, lo.rows, lo.cols);
+        
+    //     matMulElementWise<<<ComputeDelta.grid, ComputeDelta.threads>>>(delta.device_ptr, lo.device_ptr, delta.device_ptr, delta.rows, delta.cols);
+    // }
+
     // Update weights and biases
     for (int l = 0; l < num_layers; l++) {
         xarray<float> gradient_w = xt::linalg::dot(deltas[l], xt::transpose(layer_activations[l])) / current_batch_size; // Batch size may vary, at the end of epoch
@@ -193,6 +267,48 @@ void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &cur
         weights[l] -= learning_rate * gradient_w;
         biases[l] -= learning_rate * gradient_b;
     }
+
+    // for (size_t l = 0; l < num_layers; l++) {
+    //     CudaMatrixMemory &w_grad = CMV.grad_weights[l];
+    //     CudaMatrixMemory &b_grad = CMV.b_gradients[l];
+    //     CudaMatrixMemory &w = CMV.weights[l];
+    //     CudaMatrixMemory &b = CMV.biases[l];
+    //     CudaMatrixMemory &la = CMV.layer_activations[l];
+    //     CudaMatrixMemory &delta = CMV.deltas[l];
+
+    //     CudaGrid GradientWGrid;
+    //     GradientWGrid.setKernelGrid(16, 16, w_grad.rows, w_grad.rows);
+    //     CudaGrid GradientBGrid;
+    //     GradientBGrid.setKernelGrid(16, 16, b_grad.rows, b_grad.cols);
+    //     CudaGrid TransposeGrid;
+    //     TransposeGrid.setKernelGrid(16, 16, la.rows, la.cols);
+
+    //     transposeKernel<<<TransposeGrid.grid, TransposeGrid.threads>>>(la.device_ptr, la.device_ptr, la.rows, la.cols);
+    //     float *&laT_ptr = la.device_ptr;
+        
+    //     matrixMulKernel<<<GradientWGrid.grid, GradientWGrid.threads>>>(delta.device_ptr, laT_ptr, w_grad.device_ptr, delta.rows, delta.cols, la.rows); // B_cols is la.rows since laT_ptr is transpose of la
+        
+    //     float w_grad_scalar = learning_rate / current_batch_size;
+    //     matrixScalarKernel<<<GradientWGrid.grid, GradientWGrid.threads>>>(w_grad.device_ptr, w_grad.device_ptr, w_grad_scalar, w_grad.rows, w_grad.cols);
+
+    //     computeMeanKernel<<<GradientBGrid.grid, GradientBGrid.threads>>>(delta.device_ptr, b_grad.device_ptr, delta.rows, delta.cols);
+
+    //     const float &b_grad_scalar = learning_rate;
+    //     matrixScalarKernel<<<GradientBGrid.grid, GradientBGrid.threads>>>(b_grad.device_ptr, b_grad.device_ptr, b_grad_scalar, b_grad.rows, b_grad.cols);
+
+    //     addMatrixToMatrix<<<GradientWGrid.grid, GradientWGrid.threads>>>(w_grad.device_ptr, w.device_ptr, -1.f, w.device_ptr, w.rows, w.cols);
+    //     addMatrixToMatrix<<<GradientBGrid.grid, GradientBGrid.threads>>>(b_grad.device_ptr, b.device_ptr, -1.f, b.device_ptr, b.rows, b.cols);
+
+    //     float *host_b = b.allocAndSend2Host();
+    //     float *host_w = w.allocAndSend2Host();
+    //     ArrayHandler xt_b;
+    //     xt_b.cast_carray(host_b, b.rows, b.cols);
+    //     ArrayHandler xt_w;
+    //     xt_w.cast_carray(host_w, w.rows, w.cols);
+
+    //     weights[l] = xt_w.xtarray;
+    //     biases[l] = xt_b.xtarray;
+    // }
 }
 
 void GradientDescent::train(const unsigned int &epochs, const float &learning_rate) {

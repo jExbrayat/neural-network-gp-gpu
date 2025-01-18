@@ -13,6 +13,8 @@ struct CudaMemberVectors {
     vector<CudaMatrixMemory> layer_activations; 
 
     vector<CudaMatrixMemory> deltas;
+    vector<CudaMatrixMemory> grad_weights;
+    vector<CudaMatrixMemory> grad_biases;
 };
 
 #endif

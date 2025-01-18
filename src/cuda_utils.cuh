@@ -30,7 +30,6 @@ public:
     const int cols;
 
     // Method
-    void allocateCudaMemory();
     void sendMatrix2Device(const float *carray);
     float* allocAndSend2Host();
     

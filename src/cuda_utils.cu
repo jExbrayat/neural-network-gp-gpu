@@ -11,19 +11,18 @@ void CudaThrowError::throwError(std::string custom_msg) {
 }
 
 CudaMatrixMemory::CudaMatrixMemory(const int rows, const int cols) : rows(rows), cols(cols) {
-};
-
-void CudaMatrixMemory::allocateCudaMemory() {
-    // Make a protection to not allocate two times
     memory_size = sizeof(float) * rows * cols;
     cudaError_t err = cudaMalloc((void**)&device_ptr, memory_size);
     CudaThrowError throwErr(err);
     throwErr.throwError("cudaMalloc failed: ");
 }
 
-// The user of the class is responsible for freeing the cuda allocated memory.
-// This behavior should better changed but is due to the objects going out of scope at the end of the GradientDescent constructor 
-CudaMatrixMemory::~CudaMatrixMemory() {}
+CudaMatrixMemory::~CudaMatrixMemory() {
+    if (device_ptr) {
+        cudaFree(device_ptr);
+        std::cout << "FREEING MEMORY" << std::endl;
+    }
+}
 
 void CudaMatrixMemory::sendMatrix2Device(const float *carray) {
     cudaError_t err = cudaMemcpy(device_ptr, carray, memory_size, cudaMemcpyHostToDevice);

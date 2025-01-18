@@ -28,8 +28,8 @@ public:
     vector<xarray<float>> weights;   // Weights of the network
     vector<xarray<float>> biases;    // Biases of the network
     vector<float> loss_history;      // History of loss over epochs
-    xarray<float> x_train;           // Training data (inputs)
-    xarray<float> y_train;           // Labels corresponding to the training data
+    const xarray<float> x_train;           // Training data (inputs)
+    const xarray<float> y_train;           // Labels corresponding to the training data
     const int batch_size;
 
 private:

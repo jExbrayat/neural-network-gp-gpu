@@ -2,7 +2,7 @@
 NVCC = nvcc
 CXX = g++
 CXXFLAGS = -std=c++17 -I"libraries/include" -I"src"
-NVCCFLAGS = -std=c++17 -I"libraries/include" -I"src"
+NVCCFLAGS = -std=c++17 -g -I"libraries/include" -I"src"
 
 # Directories
 SRC_DIR = src

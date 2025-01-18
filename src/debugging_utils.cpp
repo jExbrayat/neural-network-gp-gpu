@@ -10,6 +10,15 @@ void printCudaMatrixShapes(const CudaMatrixMemory &cudaMatrixMemory, string msg)
     cout << msg << endl;
     cout << cudaMatrixMemory.rows << ", " << cudaMatrixMemory.cols << endl; 
 }
+
+/**
+ * @brief 
+ * 
+ * @param cuda_array Reference to a CudaMatrixMemory. Please note device memory must have been allocated with the allocateCudaMemory method. 
+ * @param reference_xtarray 
+ * @param epsilon 
+ * @param custom_msg 
+ */
 void checkCudaComputation(CudaMatrixMemory &cuda_array, xt::xarray<float> &reference_xtarray, float epsilon, string custom_msg) {
     // Check if the shape of reference matches the shape of cuda_array
     if (reference_xtarray.shape(0) != cuda_array.rows || reference_xtarray.shape(1) != cuda_array.cols) {

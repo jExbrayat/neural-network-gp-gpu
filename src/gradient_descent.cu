@@ -46,7 +46,10 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
         // Weights
         int wrows = weights[l].shape(0);
         int wcols = weights[l].shape(1);
+        ArrayHandler wtest;
+        wtest.cast_xtarray(weights[l]);
         CMV.weights.emplace_back(wrows, wcols);
+        CMV.weights[l].sendMatrix2Device(wtest.carray);
 
         // Weights gradients
         CMV.grad_weights.emplace_back(wrows, wcols);
@@ -54,7 +57,10 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
         // Biases
         int brows = biases[l].shape(0);
         int bcols = biases[l].shape(1);
+        ArrayHandler btest;
+        btest.cast_xtarray(biases[l]);
         CMV.biases.emplace_back(brows, bcols);
+        CMV.biases[l].sendMatrix2Device(btest.carray);
 
         // Biases gradients
         CMV.grad_biases.emplace_back(brows, bcols);
@@ -99,14 +105,8 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
     // Perform computations with cuda
     for (size_t l = 0; l < num_layers; l++) {
         CudaMatrixMemory& w = CMV.weights[l];
-        ArrayHandler get_weights;
-        get_weights.cast_xtarray(weights[l]);
-        w.sendMatrix2Device(get_weights.carray);
         
         CudaMatrixMemory& b = CMV.biases[l];
-        ArrayHandler get_biases;
-        get_biases.cast_xtarray(biases[l]);
-        b.sendMatrix2Device(get_biases.carray);
 
         CudaMatrixMemory& lo = CMV.layer_outputs[l];
 
@@ -125,20 +125,6 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(lo.device_ptr, b.device_ptr, lo.device_ptr, lo.rows, lo.cols);
         sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(lo.device_ptr, la_next.device_ptr, la_next.rows, la_next.cols);
 
-        // Copy back the computations into the base pipeline
-        float* w_host = w.allocAndSend2Host();
-        float* b_host = b.allocAndSend2Host();
-        float* lo_host = lo.allocAndSend2Host();
-        float* la_host = la.allocAndSend2Host();
-        float* la_next_host = la_next.allocAndSend2Host();
-
-
-
-        delete[] w_host;
-        delete[] b_host;
-        delete[] lo_host;
-        delete[] la_host;
-        delete[] la_next_host;
     }
 
 }
@@ -259,16 +245,6 @@ void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &cur
         addMatrixToMatrix<<<GradientWGrid.grid, GradientWGrid.threads>>>(w.device_ptr, w_grad.device_ptr, -1.f, w.device_ptr, w.rows, w.cols);
         addMatrixToMatrix<<<GradientBGrid.grid, GradientBGrid.threads>>>(b.device_ptr, b_grad.device_ptr, -1.f, b.device_ptr, b.rows, b.cols);
 
-        // Send back to original pipeline
-        float *host_b = b.allocAndSend2Host();
-        float *host_w = w.allocAndSend2Host();
-        ArrayHandler xt_b;
-        xt_b.cast_carray(host_b, b.rows, b.cols);
-        ArrayHandler xt_w;
-        xt_w.cast_carray(host_w, w.rows, w.cols);
-
-        weights[l] = xt_w.xtarray;
-        biases[l] = xt_b.xtarray;
     }
 }
 

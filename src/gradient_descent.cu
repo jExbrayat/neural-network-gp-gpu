@@ -15,7 +15,7 @@ using namespace xt;
 
 // Define constructor
 // Just init class members
-GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<float> &y_train, vector<xarray<float>> &weights, vector<xarray<float>> &biases, const int batch_size) : x_train(x_train), y_train(y_train), weights(weights), biases(biases), batch_size(batch_size) {
+GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<float> &y_train, vector<xarray<float>> &weights, vector<xarray<float>> &biases, const int batch_size) : x_train(x_train), y_train(y_train), weights(weights), biases(biases), batch_size(batch_size), Dataset(x_train, y_train) {
     num_layers = weights.size(); 
     layer_outputs.resize(num_layers);
     layer_activations.resize(num_layers + 1);
@@ -349,3 +349,17 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
     }
 }
 
+CastDataset::CastDataset(const xarray<float>& x, const xarray<float>& y)
+    : xrows(x.shape(0)), xcols(x.shape(1)), yrows(y.shape(0)), ycols(y.shape(1)) {
+
+    x_carray = new float[xrows * xcols]; // Allocate memory
+    y_carray = new float[yrows * ycols]; // Allocate memory
+
+    std::memcpy(x_carray, x.data(), xrows * xcols * sizeof(float));
+    std::memcpy(y_carray, y.data(), yrows * ycols * sizeof(float));
+}
+
+CastDataset::~CastDataset() {
+    delete[] x_carray; // Free memory
+    delete[] y_carray; // Free memory
+}

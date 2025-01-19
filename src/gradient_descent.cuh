@@ -10,9 +10,23 @@
 #include <optional>
 #include "cuda_utils.cuh"
 #include "cuda_members.cuh"
+#include "utils.hpp"
 
 using namespace std;
 using namespace xt;
+
+
+class CastDataset {
+    public:
+    CastDataset(const xarray<float>& x, const xarray<float>& y);
+    ~CastDataset();
+    float *x_carray;
+    float *y_carray;
+    int xrows;
+    int yrows;
+    int xcols;
+    int ycols;
+};
 
 class GradientDescent
 {
@@ -45,6 +59,7 @@ private:
     vector<xarray<float>> layer_activations;   // Layer activations after applying activation function
 
     CudaMemberVectors CudaMembers;
+    CastDataset Dataset;
 };
 
 #endif // GRADIENT_DESCENT_CUH

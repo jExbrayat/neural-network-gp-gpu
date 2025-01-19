@@ -15,74 +15,9 @@ using namespace xt;
 
 // Define constructor
 // Just init class members
-GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<float> &y_train, vector<xarray<float>> &weights, vector<xarray<float>> &biases, const int batch_size) : x_train(x_train), y_train(y_train), weights(weights), biases(biases), batch_size(batch_size) {
+GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<float> &y_train, vector<xarray<float>> &weights, vector<xarray<float>> &biases, const int batch_size) : x_train(x_train), y_train(y_train), weights(weights), biases(biases), batch_size(batch_size), XT2Cuda(x_train, y_train, weights, biases, batch_size) {
     num_layers = weights.size(); 
-    layer_outputs.resize(num_layers);
-    layer_activations.resize(num_layers + 1);
 
-    CudaMemberVectors& CMV = CudaMembers;
-    CMV.biases.reserve(num_layers);
-    CMV.deltas.reserve(num_layers);
-    CMV.layer_activations.reserve(num_layers + 1);
-    CMV.layer_outputs.reserve(num_layers);
-    CMV.weights.reserve(num_layers);
-    CMV.grad_biases.reserve(num_layers);
-    CMV.grad_weights.reserve(num_layers);
-
-    // Initialize cuda arrays (allocate memory)
-    
-    // Init first layer input, which is the transpose of x_batch
-    // Note that the indexing of LA (layer_activations) is somehow décalé: LA_l is the input of the layer L and output of the layer l-1
-    int larows = x_train.shape(1);
-    int lacols = batch_size;
-    CMV.layer_activations.emplace_back(larows, lacols);
-    
-    // Init first delta i.e. the delta tensor of the last layer
-    int init_deltarows = x_train.shape(1); // nb features
-    int init_deltacols = batch_size;
-    CMV.deltas.emplace_back(init_deltarows, init_deltacols);
-
-    for (size_t l = 0; l < num_layers; l++) {
-        // Weights
-        int wrows = weights[l].shape(0);
-        int wcols = weights[l].shape(1);
-        ArrayHandler wtest;
-        wtest.cast_xtarray(weights[l]);
-        CMV.weights.emplace_back(wrows, wcols);
-        CMV.weights[l].sendMatrix2Device(wtest.carray);
-
-        // Weights gradients
-        CMV.grad_weights.emplace_back(wrows, wcols);
-
-        // Biases
-        int brows = biases[l].shape(0);
-        int bcols = biases[l].shape(1);
-        ArrayHandler btest;
-        btest.cast_xtarray(biases[l]);
-        CMV.biases.emplace_back(brows, bcols);
-        CMV.biases[l].sendMatrix2Device(btest.carray);
-
-        // Biases gradients
-        CMV.grad_biases.emplace_back(brows, bcols);
-
-        // Layer output = W_l * LA_l + B_l
-        int lorows = wrows;
-        int locols = CMV.layer_activations[l].cols;
-        CMV.layer_outputs.emplace_back(lorows, locols);
-
-        // Layer activation = sigmoid( LO_{l-1} )
-        // We are pushing the element l + 1 of the vector now (because of the initialization before the loop)
-        CMV.layer_activations.emplace_back(lorows, locols);
-
-        if (l > 0) { // Otherwise do nothing since the first value is initialized already
-            int deltarows = weights[num_layers - l].shape(1);
-            int deltacols = CMV.deltas[l - 1].cols;
-            CMV.deltas.emplace_back(deltarows, deltacols);
-        }
-
-
-        cudaDeviceSynchronize();
-    }  
 }
 
 
@@ -90,13 +25,13 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
 
 void GradientDescent::forward_pass(const xarray<float> &x_batch) {
 
-    layer_activations[0] = xt::transpose(x_batch);
+    xarray<float> x_batchT = xt::transpose(x_batch);
     
     // Transform xtarray into carray
     ArrayHandler XBATCH_T;
-    XBATCH_T.cast_xtarray(layer_activations[0]);
+    XBATCH_T.cast_xtarray(x_batchT);
 
-    CudaMemberVectors& CMV = CudaMembers; 
+    CudaMemberVectors& CMV = XT2Cuda.CudaMembers; 
 
     // Copy XBATCH_T into CMV.layer_activations[0] i.e. the network's input
     CudaMatrixMemory& network_input = CMV.layer_activations[0];
@@ -144,7 +79,7 @@ void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &cur
     checkCudaComputation(cmm_y_batchT, refxt_ybatchT, 0.001, "Check transposition of y_batch: ");
 
     // Create reference for easier reading
-    CudaMemberVectors &CMV = CudaMembers;
+    CudaMemberVectors &CMV = XT2Cuda.CudaMembers;
     CudaMatrixMemory &delta = CMV.deltas[0];
     CudaMatrixMemory &lo = CMV.layer_outputs[num_layers - 1];
     CudaMatrixMemory &la_next = CMV.layer_activations[num_layers];
@@ -279,7 +214,7 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
             // Perform the backward pass
             backward_pass(y_batch,  current_batch_size, learning_rate); // Modify the weights and biases
  
-            CudaMemberVectors &CMV = CudaMembers;
+            CudaMemberVectors &CMV = XT2Cuda.CudaMembers;
             float* host_last_activation = CMV.layer_activations[num_layers].allocAndSend2Host();             
             ArrayHandler last_activation;
             last_activation.cast_carray(host_last_activation, CMV.layer_activations[num_layers].rows, CMV.layer_activations[num_layers].cols);

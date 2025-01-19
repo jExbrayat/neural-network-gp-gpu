@@ -9,7 +9,7 @@ SRC_DIR = src
 BUILD_DIR = build
 
 # Source files
-CUDA_SRCS = $(SRC_DIR)/cuda_operations.cu $(SRC_DIR)/gradient_descent.cu $(SRC_DIR)/cuda_utils.cu $(SRC_DIR)/test.cu
+CUDA_SRCS = $(SRC_DIR)/cuda_operations.cu $(SRC_DIR)/gradient_descent.cu $(SRC_DIR)/cuda_utils.cu $(SRC_DIR)/test.cu $(SRC_DIR)/cuda_members.cu
 CPP_SRCS = $(filter-out $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/*.cpp))
 MAIN_CPP = $(SRC_DIR)/main.cpp
 TEST_CPP = $(SRC_DIR)/test.cu

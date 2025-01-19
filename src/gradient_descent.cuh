@@ -41,10 +41,8 @@ private:
 
     // Class members for layer outputs and activations
     int num_layers;                   // Number of layers in the network
-    vector<xarray<float>> layer_outputs;   // Layer outputs (linear activations)
-    vector<xarray<float>> layer_activations;   // Layer activations after applying activation function
 
-    CudaMemberVectors CudaMembers;
+    Xtensor2CudaMatrixMemory XT2Cuda;
 };
 
 #endif // GRADIENT_DESCENT_CUH

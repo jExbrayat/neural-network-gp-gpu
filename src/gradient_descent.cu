@@ -109,19 +109,10 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         b.sendMatrix2Device(get_biases.carray);
 
         CudaMatrixMemory& lo = CMV.layer_outputs[l];
-        ArrayHandler get_lo;
-        get_lo.cast_xtarray(layer_outputs[l]);
-        lo.sendMatrix2Device(get_lo.carray);
 
         CudaMatrixMemory& la = CMV.layer_activations[l];
-        ArrayHandler get_la;
-        get_la.cast_xtarray(layer_activations[l]);
-        la.sendMatrix2Device(get_la.carray);
 
         CudaMatrixMemory& la_next = CMV.layer_activations[l + 1];
-        ArrayHandler get_la_next;
-        get_la_next.cast_xtarray(layer_activations[l + 1]);
-        la_next.sendMatrix2Device(get_la_next.carray);
         
         CudaGrid matMulGrid;
         CudaGrid addGrid;
@@ -134,12 +125,6 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         addBiasToMatrixKernel<<<addGrid.grid, addGrid.threads>>>(lo.device_ptr, b.device_ptr, lo.device_ptr, lo.rows, lo.cols);
         sigmoidKernel<<<sigmoidGrid.grid, sigmoidGrid.threads>>>(lo.device_ptr, la_next.device_ptr, la_next.rows, la_next.cols);
 
-        // Perform computation on CPU
-        xarray<float> CPU_lo = xt::linalg::dot(weights[l], layer_activations[l]) + biases[l];
-        xarray<float> CPU_la_next = sigmoid(CPU_lo); 
-        // Check computation
-        checkCudaComputation(la_next, CPU_la_next, 0.01, "Check computation of LA NEXT of l = " + to_string(l));
-
         // Copy back the computations into the base pipeline
         float* w_host = w.allocAndSend2Host();
         float* b_host = b.allocAndSend2Host();
@@ -147,14 +132,6 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
         float* la_host = la.allocAndSend2Host();
         float* la_next_host = la_next.allocAndSend2Host();
 
-        // Assign to base pipeline
-        ArrayHandler lo_xt;
-        lo_xt.cast_carray(lo_host, lo.rows, lo.cols);
-        layer_outputs[l] = lo_xt.xtarray;
-        
-        ArrayHandler la_next_xt;
-        la_next_xt.cast_carray(la_next_host, la_next.rows, la_next.cols);
-        layer_activations[l + 1] = la_next_xt.xtarray;  
 
 
         delete[] w_host;
@@ -168,16 +145,6 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
 
 void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &current_batch_size, const float &learning_rate) {
     
-    vector<xarray<float>> deltas(num_layers);
-
-    // Init delta vector corresponding to the last layer
-    xarray<float> &last_activation = layer_activations[num_layers];
-    deltas[num_layers - 1] = (last_activation - xt::transpose(y_batch)) * sigmoid_derivative(layer_outputs[num_layers - 1]);
-
-    for (int l = num_layers - 2; l >= 0; l--) {
-        deltas[l] = xt::linalg::dot(xt::transpose(weights[l + 1]), deltas[l + 1]) * sigmoid_derivative(layer_outputs[l]);
-    }
-
     // Compute delta vectors
         
     // Transpose y_batch and send to device
@@ -211,8 +178,6 @@ void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &cur
     // Store the final result in delta.device_ptr
     matMulElementWise<<<InitDelta.grid, InitDelta.threads>>>(delta.device_ptr, lo.device_ptr, delta.device_ptr, delta.rows, delta.cols);
 
-    checkCudaComputation(delta, deltas[num_layers - 1], 0.001, "Check computation of the init of deltas: ");
-
 
     // Compute remaining delta vectors
     for (size_t l = 1; l < num_layers; l++) {
@@ -242,7 +207,6 @@ void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &cur
         // Compute element wise multiplication. Store final result in delta 
         matMulElementWise<<<ComputeDelta.grid, ComputeDelta.threads>>>(delta.device_ptr, lo.device_ptr, delta.device_ptr, delta.rows, delta.cols);
 
-        checkCudaComputation(delta, deltas[num_layers - l - 1], 0.001, "Check computation for the delta vectors: ");
     }
 
 
@@ -334,13 +298,19 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
 
             // Perform the forward pass
             forward_pass(x_batch); // Modify the layer_activations and layer_outputs
-            xarray<float> &last_activation = layer_activations[num_layers];
+            
 
             // Perform the backward pass
             backward_pass(y_batch,  current_batch_size, learning_rate); // Modify the weights and biases
  
+            CudaMemberVectors &CMV = CudaMembers;
+            float* host_last_activation = CMV.layer_activations[num_layers].allocAndSend2Host();             
+            ArrayHandler last_activation;
+            last_activation.cast_carray(host_last_activation, CMV.layer_activations[num_layers].rows, CMV.layer_activations[num_layers].cols);
+            // xarray<float> &last_activation = layer_activations[num_layers];
+
             // Compute the loss for the current batch
-            xarray<float> squared_error = xt::pow(last_activation - xt::transpose(y_batch), 2); // Error for each pixel of each observation
+            xarray<float> squared_error = xt::pow(last_activation.xtarray - xt::transpose(y_batch), 2); // Error for each pixel of each observation
             xarray<float> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
             epoch_mse += xt::sum(observation_mse)() / dataset_size;
         }

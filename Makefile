@@ -1,8 +1,8 @@
 # Compiler and flags
 NVCC = nvcc
 CXX = g++
-CXXFLAGS = -std=c++17 -I"libraries/include" -I"src"
-NVCCFLAGS = -std=c++17 -g -I"libraries/include" -I"src"
+CXXFLAGS = -std=c++17 -g -I"libraries/include" -I"src"
+NVCCFLAGS = -std=c++17 -g -G -I"libraries/include" -I"src"
 
 # Directories
 SRC_DIR = src
@@ -50,6 +50,9 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 # Run main program
 run:
 	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB $(MAIN_EXEC) config.json
+
+rundebug:
+	srun --gres=shard:1 --cpus-per-task=4 --mem=2GB cuda-gdb $(MAIN_EXEC)
 
 # Run test program
 runtest:

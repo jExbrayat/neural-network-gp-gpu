@@ -12,9 +12,9 @@ void printCudaMatrixShapes(const CudaMatrixMemory &cudaMatrixMemory, string msg)
 }
 
 /**
- * @brief 
+ * @brief Compare a cuda allocated matrix with an xtensor array element wise by copying back cuda_array.device_ptr to host first.
  * 
- * @param cuda_array Reference to a CudaMatrixMemory. Please note device memory must have been allocated with the allocateCudaMemory method. 
+ * @param cuda_array Reference to a CudaMatrixMemory
  * @param reference_xtarray 
  * @param epsilon 
  * @param custom_msg 

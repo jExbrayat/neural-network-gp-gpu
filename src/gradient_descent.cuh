@@ -34,10 +34,10 @@ public:
 
 private:
     // Forward pass through the network
-    void forward_pass(const xarray<float>& x_batch,  float* x_ptr);
+    void forward_pass(float* x_ptr);
 
     // Backward pass to calculate gradients and update weights/biases
-    void backward_pass(const xarray<float>& y_batch, float* y_ptr,  const int& current_batch_size, const float& learning_rate);
+    void backward_pass(float* y_ptr,  const int& current_batch_size, const float& learning_rate);
 
     // Class members for layer outputs and activations
     int num_layers;                   // Number of layers in the network

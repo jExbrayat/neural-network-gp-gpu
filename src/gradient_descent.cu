@@ -65,19 +65,17 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch, float* x_ptr) {
 
 }
 
-void GradientDescent::backward_pass(const xarray<float> &y_batch, const int &current_batch_size, const float &learning_rate) {
+void GradientDescent::backward_pass(const xarray<float> &y_batch,float* y_ptr, const int &current_batch_size, const float &learning_rate) {
     
     // Compute delta vectors
-        
-    // Transpose y_batch and send to device
-    xarray<float> refxt_ybatchT = xt::transpose(y_batch);
-    ArrayHandler y_batchT;
-    y_batchT.cast_xtarray(refxt_ybatchT);
-    
+    // Transpose y_batch    
     CudaMatrixMemory cmm_y_batchT(y_batch.shape(1), y_batch.shape(0)); 
-    cmm_y_batchT.sendMatrix2Device(y_batchT.carray);
+
+    CudaGrid Transpose;
+    Transpose.setKernelGrid(16, 16, y_batch.shape(0), y_batch.shape(1));
+
+    transposeKernel<<<Transpose.grid, Transpose.threads>>>(y_ptr, cmm_y_batchT.device_ptr, y_batch.shape(0), y_batch.shape(1));
     
-    checkCudaComputation(cmm_y_batchT, refxt_ybatchT, 0.001, "Check transposition of y_batch: ");
 
     // Create reference for easier reading
     CudaMemberVectors &CMV = XT2Cuda.CudaMembers;
@@ -219,8 +217,11 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
             forward_pass(x_batch, x_ptr); // Modify the layer_activations and layer_outputs
             
 
+
+            int ycols = y_train.shape(1);
+            float *y_ptr = XT2Cuda.y.device_ptr + ycols * batch_start;
             // Perform the backward pass
-            backward_pass(y_batch,  current_batch_size, learning_rate); // Modify the weights and biases
+            backward_pass(y_batch, y_ptr,  current_batch_size, learning_rate); // Modify the weights and biases
  
             CudaMemberVectors &CMV = XT2Cuda.CudaMembers;
             float* host_last_activation = CMV.layer_activations[num_layers].allocAndSend2Host();             

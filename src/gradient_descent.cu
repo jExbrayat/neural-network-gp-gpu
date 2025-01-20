@@ -25,12 +25,6 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
 
 void GradientDescent::forward_pass(const xarray<float> &x_batch, float* x_ptr) {
 
-    xarray<float> x_batchT = xt::transpose(x_batch);
-    
-    // Transform xtarray into carray
-    ArrayHandler XBATCH_T;
-    XBATCH_T.cast_xtarray(x_batchT);
-
     CudaMemberVectors& CMV = XT2Cuda.CudaMembers; 
 
 
@@ -43,7 +37,6 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch, float* x_ptr) {
     
     transposeKernel<<<Transpose.grid, Transpose.threads>>>(x_ptr, network_input.device_ptr, batch_size, x_batch.shape(1));
 
-    checkCudaComputation(network_input, x_batchT, 0.001, "tranpose of input");
     
     // Perform computations with cuda
     for (size_t l = 0; l < num_layers; l++) {

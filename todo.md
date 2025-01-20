@@ -9,6 +9,7 @@
 - [ ] Free allocated memory in the destructor of GradientDescent
 - [ ] Use unidimentional cuda grids when possible for coalesced access
 - [ ] Figure out why the stack smashing error appeared
+- [ ] Manage different batch sizes
 
 
 - [ ] Is it better pratice to malloc at each forward pass or once in the constructor and reuse the same memory ? In term of computation time and reliability ?

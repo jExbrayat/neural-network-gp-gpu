@@ -274,3 +274,39 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
     }
 }
 
+
+void GradientDescent::get_weights() {
+    
+
+    for (size_t l=0; l < num_layers; l++) {
+
+        CudaMatrixMemory &DeviceLayerWeights = XT2Cuda.CudaMembers.weights[l];
+        float *host_weights = DeviceLayerWeights.allocAndSend2Host();
+
+
+        ArrayHandler GetWeights;
+        GetWeights.cast_carray(host_weights, DeviceLayerWeights.rows, DeviceLayerWeights.cols);
+        this->weights[l] = GetWeights.xtarray; // Perform a deep copy
+    }
+
+
+}
+
+
+void GradientDescent::get_biases() {
+    
+
+    for (size_t l=0; l < num_layers; l++) {
+
+        CudaMatrixMemory &DeviceLayerBiases = XT2Cuda.CudaMembers.biases[l];
+        float *host_biases = DeviceLayerBiases.allocAndSend2Host();
+
+
+        ArrayHandler GetBiases;
+        GetBiases.cast_carray(host_biases, DeviceLayerBiases.rows, DeviceLayerBiases.cols);
+        this->biases[l] = GetBiases.xtarray; // Perform a deep copy
+    }
+
+
+}
+

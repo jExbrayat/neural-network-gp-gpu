@@ -32,6 +32,8 @@ public:
     const xarray<float> y_train;           // Labels corresponding to the training data
     const int batch_size;
 
+    void get_weights();
+    void get_biases();
 private:
     // Forward pass through the network
     void forward_pass(float* x_ptr);

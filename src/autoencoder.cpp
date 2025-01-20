@@ -13,7 +13,10 @@ void Autoencoder::fit(const xarray<float> &x_train, const unsigned int &epochs, 
     
     // Train the model using the train method of GradientDescent
     gradientDescent.train(epochs, learning_rate);
-    
+
+    gradientDescent.get_weights();
+    gradientDescent.get_biases();
+
     // Retrieve the results
     weights = gradientDescent.weights;
     biases = gradientDescent.biases;

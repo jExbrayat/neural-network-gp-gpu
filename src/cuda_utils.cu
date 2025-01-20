@@ -37,6 +37,8 @@ void CudaMatrixMemory::sendMatrix2Device(const float *carray) {
     cudaError_t err = cudaMemcpy(device_ptr, carray, memory_size, cudaMemcpyHostToDevice);
     CudaThrowError throwErr(err);
     throwErr.throwError("cudaMemcpy failed: ");
+
+    std::cout << "Performed cudaMemcpy" << std::endl; 
 }
 
 /**
@@ -55,6 +57,8 @@ float* CudaMatrixMemory::allocAndSend2Host() {
     cudaError_t err = cudaMemcpy(host_ptr, device_ptr, memory_size, cudaMemcpyDeviceToHost);
     CudaThrowError throwErr(err);
     throwErr.throwError("cudaMemcpy failed: ");
+
+    std::cout << "Performed cudaMemcpy" << std::endl; 
 
     return host_ptr;
 }

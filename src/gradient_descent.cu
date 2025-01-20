@@ -259,6 +259,7 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
 
 
                 cudaMemcpy(MSE, last_la.device_ptr, MSE_memsize, cudaMemcpyDeviceToHost);
+                std::cout << "Performed cudaMemcpy" << std::endl; 
 
                 // xarray<float> squared_error = xt::pow(last_activation.xtarray - xt::transpose(y_batch), 2); // Error for each pixel of each observation
                 // xarray<float> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
@@ -293,6 +294,7 @@ void GradientDescent::get_weights() {
         
         delete[] host_weights;
     }
+
 
 
 }

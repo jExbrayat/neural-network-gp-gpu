@@ -25,7 +25,7 @@ Epoch: 0
    Batch: 8 / 9
    MSE: 0.205711
 
-Give the following since we use float instead of double: 
+Give the following since weights initialization changed from gaussian to zero: 
 Epoch: 0
    Batch: 0 / 9
    Batch: 1 / 9

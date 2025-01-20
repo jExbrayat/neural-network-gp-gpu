@@ -29,6 +29,7 @@ CudaMatrixMemory::CudaMatrixMemory(const int rows, const int cols) : rows(rows),
 CudaMatrixMemory::~CudaMatrixMemory() {
     if (device_ptr) {
         cudaFree(device_ptr);
+        std::cout << "Freeing cuda memory" << std::endl;
     }
 }
 

@@ -9,9 +9,12 @@
 #include <vector>              // For std::vector
 using namespace std;
 
-Xtensor2CudaMatrixMemory::Xtensor2CudaMatrixMemory(const xt::xarray<float>&x_train, const xt::xarray<float>&y_train,  vector<xt::xarray<float>>& weights, vector<xt::xarray<float>>& biases,const  int batch_size) : x(x_train.shape(0), x_train.shape(1)), y(y_train.shape(0), y_train.shape(0)) {
+Xtensor2CudaMatrixMemory::Xtensor2CudaMatrixMemory(const xt::xarray<float>&x_train, const xt::xarray<float>&y_train,  vector<xt::xarray<float>>& weights, vector<xt::xarray<float>>& biases,const  int batch_size) : x(x_train.shape(0), x_train.shape(1)), y(y_train.shape(0), y_train.shape(1)) {
     int num_layers = weights.size(); 
 
+
+    cout << "Allocating X and Y now" << endl;
+    cudaDeviceSynchronize();
     ArrayHandler castx;
     castx.cast_xtarray(x_train);
     x.sendMatrix2Device(castx.carray);

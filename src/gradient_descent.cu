@@ -23,7 +23,7 @@ GradientDescent::GradientDescent(const xarray<float> &x_train, const xarray<floa
 
 // Write gradient descent methods
 
-void GradientDescent::forward_pass(const xarray<float> &x_batch) {
+void GradientDescent::forward_pass(const xarray<float> &x_batch, float* x_ptr) {
 
     xarray<float> x_batchT = xt::transpose(x_batch);
     
@@ -33,9 +33,17 @@ void GradientDescent::forward_pass(const xarray<float> &x_batch) {
 
     CudaMemberVectors& CMV = XT2Cuda.CudaMembers; 
 
+
     // Copy XBATCH_T into CMV.layer_activations[0] i.e. the network's input
     CudaMatrixMemory& network_input = CMV.layer_activations[0];
-    network_input.sendMatrix2Device(XBATCH_T.carray);
+    // network_input.sendMatrix2Device(XBATCH_T.carray);
+
+    CudaGrid Transpose;
+    Transpose.setKernelGrid(16, 16, batch_size, x_batch.shape(1));
+    
+    transposeKernel<<<Transpose.grid, Transpose.threads>>>(x_ptr, network_input.device_ptr, batch_size, x_batch.shape(1));
+
+    checkCudaComputation(network_input, x_batchT, 0.001, "tranpose of input");
     
     // Perform computations with cuda
     for (size_t l = 0; l < num_layers; l++) {
@@ -206,9 +214,16 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
             int current_batch_size = batch_size;
             xarray<float> x_batch = xt::view(x_train, range(batch_start, batch_start + current_batch_size), all());
             xarray<float> y_batch = xt::view(y_train, range(batch_start, batch_start + current_batch_size), all());
+            
+            int cols = x_train.shape(1);
+            float *x_ptr = XT2Cuda.x.device_ptr + cols * batch_start;
+            // float* res = new float[batch_size * cols];
+            // int ressize = batch_size * cols * sizeof(float);
+            // cudaMemcpy(res, x_ptr, ressize, cudaMemcpyDeviceToHost);
+            // print_carray(res, cols, batch_size, "print res");
 
             // Perform the forward pass
-            forward_pass(x_batch); // Modify the layer_activations and layer_outputs
+            forward_pass(x_batch, x_ptr); // Modify the layer_activations and layer_outputs
             
 
             // Perform the backward pass

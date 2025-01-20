@@ -12,6 +12,14 @@ using namespace std;
 Xtensor2CudaMatrixMemory::Xtensor2CudaMatrixMemory(const xt::xarray<float>&x_train, const xt::xarray<float>&y_train,  vector<xt::xarray<float>>& weights, vector<xt::xarray<float>>& biases,const  int batch_size) : x(x_train.shape(0), x_train.shape(1)), y(y_train.shape(0), y_train.shape(0)) {
     int num_layers = weights.size(); 
 
+    ArrayHandler castx;
+    castx.cast_xtarray(x_train);
+    x.sendMatrix2Device(castx.carray);
+
+    ArrayHandler casty;
+    casty.cast_xtarray(y_train);
+    y.sendMatrix2Device(casty.carray);
+
     
     CudaMemberVectors& CMV = CudaMembers;
     CMV.biases.reserve(num_layers);

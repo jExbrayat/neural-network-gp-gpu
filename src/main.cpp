@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     // For now predict x_train for debugging purpose
     if (!config["pred_save_path"].is_null()) {
         // Predict
-        xt:xarray<float> y_pred = nn.predict(x_train);
+        xt:xarray<float> y_pred = nn.predict(x_test);
         // Save
         string pred_save_path = config["pred_save_path"];
         std::ofstream out_file (pred_save_path);

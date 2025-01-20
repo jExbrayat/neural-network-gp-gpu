@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Predict test set and save result if desired
+    // For now predict x_train for debugging purpose
     if (!config["pred_save_path"].is_null()) {
         // Predict
         xt:xarray<float> y_pred = nn.predict(x_train);

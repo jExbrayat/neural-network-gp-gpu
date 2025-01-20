@@ -187,6 +187,11 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
 
     int ybatch_rows = batch_size;
     int ybatch_cols = y_train.shape(1); // Nb of features
+
+    // Allocate host memory for storing the MSE
+    int MSE_memsize = sizeof(float) * ybatch_rows * 1;
+    float *MSE = new float[MSE_memsize];
+
     CudaMatrixMemory yT_ptr(ybatch_cols, ybatch_rows); 
 
     for (unsigned int epoch = 0; epoch < epochs; epoch++) {
@@ -245,21 +250,20 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
                 CudaGrid &Mean =PowerTwo;
                 CudaGrid &Substract = PowerTwo;
 
-                CudaMatrixMemory MeanMSE(batch_size, 1);
-
                 transposeKernel<<<Transpose.grid, Transpose.threads>>>(y_ptr, yT_ptr.device_ptr, batch_size, ycols);
                 addMatrixToMatrix<<<Substract.grid, Substract.threads>>>(last_la.device_ptr, yT_ptr.device_ptr, -1.f, last_la.device_ptr, last_la.rows, last_la.cols);
                 matrixPowerTwo<<<PowerTwo.grid, PowerTwo.threads>>>(last_la.device_ptr, last_la.device_ptr, last_la.rows, last_la.cols);
                 transposeKernel<<<TransposeBack.grid, TransposeBack.threads>>>(last_la.device_ptr, last_la.device_ptr, ycols, batch_size);
-                computeMeanKernel<<<Mean.grid, Mean.threads>>>(last_la.device_ptr, MeanMSE.device_ptr, batch_size, ycols);
+                // Compute mean accross observations. Store the result in la which has no consequence since it will be overwritten in next forward pass
+                computeMeanKernel<<<Mean.grid, Mean.threads>>>(last_la.device_ptr, last_la.device_ptr, batch_size, ycols);
 
-                float* obs_mse_host = MeanMSE.allocAndSend2Host();
 
+                cudaMemcpy(MSE, last_la.device_ptr, MSE_memsize, cudaMemcpyDeviceToHost);
 
                 // xarray<float> squared_error = xt::pow(last_activation.xtarray - xt::transpose(y_batch), 2); // Error for each pixel of each observation
                 // xarray<float> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
                 ArrayHandler observation_mse;
-                observation_mse.cast_carray(obs_mse_host, 1, batch_size);
+                observation_mse.cast_carray(MSE, 1, batch_size);
 
                 epoch_mse += xt::sum(observation_mse.xtarray)() / dataset_size;
             }

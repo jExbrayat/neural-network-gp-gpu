@@ -109,14 +109,10 @@ int main(int argc, char *argv[]) {
     if (!config["pred_save_path"].is_null()) {
         // Predict
         xt:xarray<float> y_pred = nn.predict(x_test);
-
         // Save
         string pred_save_path = config["pred_save_path"];
-        string true_save_path = pred_save_path + ".true";
         std::ofstream out_file (pred_save_path);
         xt::dump_csv(out_file, y_pred);
-        std::ofstream out_file (true_save_path);
-        xt::dump_csv(out_file, y_test);
     }
     return 0;
 }

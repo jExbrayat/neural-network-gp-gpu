@@ -126,3 +126,12 @@ __global__ void computeMeanKernel(const float *matrix, float * output, const int
         output[idy] = sum / cols;
     }
 }
+
+__global__ void matrixPowerTwo(const float *matrix, float * output, const int rows, const int cols) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (idx < cols && idy < rows) {
+        output[idy * cols + idx] = matrix[idy * cols + idx] * matrix[idy * cols + idx];        
+    }    
+}

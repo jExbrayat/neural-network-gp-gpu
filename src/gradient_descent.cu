@@ -228,19 +228,49 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
             // Perform the backward pass
             backward_pass(y_ptr, yT_ptr, current_batch_size, learning_rate); // Modify the weights and biases
  
-            CudaMemberVectors &CMV = XT2Cuda.CudaMembers;
-            float* host_last_activation = CMV.layer_activations[num_layers].allocAndSend2Host();             
-            ArrayHandler last_activation;
-            last_activation.cast_carray(host_last_activation, CMV.layer_activations[num_layers].rows, CMV.layer_activations[num_layers].cols);
-            // xarray<float> &last_activation = layer_activations[num_layers];
 
-            // Compute the loss for the current batch
-            xarray<float> squared_error = xt::pow(last_activation.xtarray - xt::transpose(y_batch), 2); // Error for each pixel of each observation
-            xarray<float> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
-            epoch_mse += xt::sum(observation_mse)() / dataset_size;
+            if (epoch % 10 == 0) {
+                CudaMemberVectors &CMV = XT2Cuda.CudaMembers;
+                CudaMatrixMemory &last_la = CMV.layer_activations[num_layers];
+                // float* host_last_activation = CMV.layer_activations[num_layers].allocAndSend2Host();             
+                // ArrayHandler last_activation;
+                // last_activation.cast_carray(host_last_activation, CMV.layer_activations[num_layers].rows, CMV.layer_activations[num_layers].cols);
+                // xarray<float> &last_activation = layer_activations[num_layers];
+
+                // Compute the loss for the current batch
+                CudaGrid Transpose;
+                Transpose.setKernelGrid(16,16, batch_size, ycols);
+                CudaGrid TransposeBack;
+                TransposeBack.setKernelGrid(16, 16, ycols, batch_size);
+                CudaGrid PowerTwo;
+                PowerTwo.setKernelGrid(16, 16, ycols, batch_size);
+                CudaGrid &Mean =PowerTwo;
+                CudaGrid &Substract = PowerTwo;
+
+                CudaMatrixMemory MeanMSE(batch_size, 1);
+
+                transposeKernel<<<Transpose.grid, Transpose.threads>>>(y_ptr, yT_ptr.device_ptr, batch_size, ycols);
+                addMatrixToMatrix<<<Substract.grid, Substract.threads>>>(last_la.device_ptr, yT_ptr.device_ptr, -1.f, last_la.device_ptr, last_la.rows, last_la.cols);
+                matrixPowerTwo<<<PowerTwo.grid, PowerTwo.threads>>>(last_la.device_ptr, last_la.device_ptr, last_la.rows, last_la.cols);
+                transposeKernel<<<TransposeBack.grid, TransposeBack.threads>>>(last_la.device_ptr, last_la.device_ptr, ycols, batch_size);
+                computeMeanKernel<<<Mean.grid, Mean.threads>>>(last_la.device_ptr, MeanMSE.device_ptr, batch_size, ycols);
+
+                float* obs_mse_host = MeanMSE.allocAndSend2Host();
+
+
+                // xarray<float> squared_error = xt::pow(last_activation.xtarray - xt::transpose(y_batch), 2); // Error for each pixel of each observation
+                // xarray<float> observation_mse = xt::mean(squared_error, {0}); // Mean over all the pixels in the observations
+                ArrayHandler observation_mse;
+                observation_mse.cast_carray(obs_mse_host, 1, batch_size);
+
+                epoch_mse += xt::sum(observation_mse.xtarray)() / dataset_size;
+            }
         }
-        cout << "   MSE: " << epoch_mse << endl;
-        loss_history.push_back(epoch_mse);
+        if (epoch % 10 == 0) {
+            cout << "   MSE: " << epoch_mse << endl;
+            loss_history.push_back(epoch_mse);
+
+        }
     }
 }
 

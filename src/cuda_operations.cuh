@@ -19,4 +19,6 @@ __global__ void matrixScalarKernel(const float *matrix, float* output, const flo
 
 __global__ void computeMeanKernel(const float *matrix, float * output, const int rows, const int cols);
 
+__global__ void matrixPowerTwo(const float *matrix, float * output, const int rows, const int cols);
+
 #endif

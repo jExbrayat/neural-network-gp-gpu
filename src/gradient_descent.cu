@@ -65,18 +65,17 @@ void GradientDescent::forward_pass(float* x_ptr) {
 
 }
 
-void GradientDescent::backward_pass(float* y_ptr, const int &current_batch_size, const float &learning_rate) {
+void GradientDescent::backward_pass(float* y_ptr, CudaMatrixMemory &yT_ptr, const int &current_batch_size, const float &learning_rate) {
     
     // Compute delta vectors
     // Transpose y_batch    
     int ybatch_rows = current_batch_size;
     int ybatch_cols = y_train.shape(1); // Nb of features
-    CudaMatrixMemory cmm_y_batchT(ybatch_cols, ybatch_rows); 
 
     CudaGrid Transpose;
     Transpose.setKernelGrid(16, 16, ybatch_rows, ybatch_cols);
 
-    transposeKernel<<<Transpose.grid, Transpose.threads>>>(y_ptr, cmm_y_batchT.device_ptr, ybatch_rows, ybatch_cols);
+    transposeKernel<<<Transpose.grid, Transpose.threads>>>(y_ptr, yT_ptr.device_ptr, ybatch_rows, ybatch_cols);
     
 
     // Create reference for easier reading
@@ -92,7 +91,7 @@ void GradientDescent::backward_pass(float* y_ptr, const int &current_batch_size,
     InitDelta.setKernelGrid(16, 16, delta.rows, delta.cols);
     
     // Perform soustraction. Store resutl in delta.device_ptr
-    addMatrixToMatrix<<<InitDelta.grid, InitDelta.threads>>>(la_next.device_ptr, cmm_y_batchT.device_ptr, -1.f, delta.device_ptr, delta.rows, delta.cols);
+    addMatrixToMatrix<<<InitDelta.grid, InitDelta.threads>>>(la_next.device_ptr, yT_ptr.device_ptr, -1.f, delta.device_ptr, delta.rows, delta.cols);
  
     // Store result in lo which is not a problem because this data can be altered
     sigmoidDerivativeKernel<<<InitDelta.grid, InitDelta.threads>>>(lo.device_ptr, lo.device_ptr, lo.rows, lo.cols);
@@ -188,6 +187,10 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
     int dataset_size = x_train.shape()[0];
     int batch_number = (dataset_size / batch_size);
 
+    int ybatch_rows = batch_size;
+    int ybatch_cols = y_train.shape(1); // Nb of features
+    CudaMatrixMemory yT_ptr(ybatch_cols, ybatch_rows); 
+
     for (unsigned int epoch = 0; epoch < epochs; epoch++) {
 
         cout << "Epoch: " << epoch << endl;
@@ -223,7 +226,7 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
             int ycols = y_train.shape(1);
             float *y_ptr = XT2Cuda.y.device_ptr + ycols * batch_start;
             // Perform the backward pass
-            backward_pass(y_ptr,  current_batch_size, learning_rate); // Modify the weights and biases
+            backward_pass(y_ptr, yT_ptr, current_batch_size, learning_rate); // Modify the weights and biases
  
             CudaMemberVectors &CMV = XT2Cuda.CudaMembers;
             float* host_last_activation = CMV.layer_activations[num_layers].allocAndSend2Host();             

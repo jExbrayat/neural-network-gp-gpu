@@ -274,6 +274,7 @@ void GradientDescent::train(const unsigned int &epochs, const float &learning_ra
 
         }
     }
+    delete[] MSE;
 }
 
 
@@ -289,6 +290,8 @@ void GradientDescent::get_weights() {
         ArrayHandler GetWeights;
         GetWeights.cast_carray(host_weights, DeviceLayerWeights.rows, DeviceLayerWeights.cols);
         this->weights[l] = GetWeights.xtarray; // Perform a deep copy
+        
+        delete[] host_weights;
     }
 
 
@@ -307,6 +310,9 @@ void GradientDescent::get_biases() {
         ArrayHandler GetBiases;
         GetBiases.cast_carray(host_biases, DeviceLayerBiases.rows, DeviceLayerBiases.cols);
         this->biases[l] = GetBiases.xtarray; // Perform a deep copy
+
+        delete[] host_biases;
+    
     }
 
 

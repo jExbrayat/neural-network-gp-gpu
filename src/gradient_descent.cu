@@ -156,13 +156,11 @@ void GradientDescent::backward_pass(float* y_ptr, CudaMatrixMemory &yT_ptr, cons
         CudaGrid TransposeGrid;
         TransposeGrid.setKernelGrid(16, 16, la.rows, la.cols);
 
-        CudaMatrixMemory la_T(la.cols, la.rows);
-
         // Compute transpose of la. Store the result in la.device_ptr which has no consequence since it will be overwritten in next forward_pass
-        transposeKernel<<<TransposeGrid.grid, TransposeGrid.threads>>>(la.device_ptr, la_T.device_ptr, la.rows, la.cols);
+        transposeKernel<<<TransposeGrid.grid, TransposeGrid.threads>>>(la.device_ptr, la.device_ptr, la.rows, la.cols);
         
         // Compute dot product. Store result in w_grad
-        matrixMulKernel<<<GradientWGrid.grid, GradientWGrid.threads>>>(delta.device_ptr, la_T.device_ptr, w_grad.device_ptr, delta.rows, delta.cols, la.rows);
+        matrixMulKernel<<<GradientWGrid.grid, GradientWGrid.threads>>>(delta.device_ptr, la.device_ptr, w_grad.device_ptr, delta.rows, delta.cols, la.rows);
 
         // Compute multiplication of matrix by scalar. Store result in w_grad
         // Multiply by learning rate at the same time

@@ -25,9 +25,9 @@ The configuration file should be in JSON format with the following parameters:
 - **`"batch_size"`** *int*: Size of each batch for training.
 - **`"learning_rate"`** *float*: Learning rate for the optimizer.
 - **`"network_architecture"`** *list<int>*: List representing the number of neurons per layer. For example, `[4, 8, 1]` specifies an architecture with two hidden layers and a single output neuron.
-- **`"pretrained_model_path"`** *string | null*: Path to a pretrained model to load initial weights and loss values, allowing continuation of training.
-- **`"model_save_path"`** *string | null*: Path to save the trained model weights and loss data. *Note:* Ensure the directory exists before running the program, as it does not currently create missing directories.
-- **`"pred_save_path"`** *string*: Path to save predictions for the test set.
+- **`"pretrained_model_path"`** *string | null*: Folder path to a pretrained model to load initial weights and loss values, allowing continuation of training.
+- **`"model_save_path"`** *string | null*: Folder path to save the trained model weights and loss data. *Note:* Ensure the directory exists before running the program, as it does not currently create missing directories.
+- **`"pred_save_path"`** *string*: File path to save predictions for the test set.
 
 ## User Guide
 
@@ -45,7 +45,7 @@ The program is thought to be compiled without Docker in case of admin rights res
 1) `cd` in the project's root directory.  
 2) Build the program by including the header only libraries:
 ```bash
-g++ -I "libraries/include" -I "." src/main.cpp -o build/main
+g++ -std=c++17 -I "libraries/include" -I "." src/main.cpp -o build/main
 ```
 
 #### With Docker

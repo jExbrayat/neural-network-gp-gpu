@@ -5,7 +5,6 @@
 #include <xtensor/xarray.hpp>
 #include <iostream>
 
-using namespace std;
 using namespace xt;
 
 class Autoencoder : public Model {
@@ -15,8 +14,8 @@ public:
         : Model(architecture, input_size) {};  // Call the base class parameterized constructor
 
     // Methods
-    void fit(const xarray<double> &x_train, const unsigned int &epochs, const int &batch_size, const float &learning_rate);
-    static tuple<xarray<double>, xarray<double>, xarray<double>, xarray<double>> load_mnist_dataset(const float &train_test_split);
+    void fit(const xarray<float> &x_train, const unsigned int &epochs, const int &batch_size, const float &learning_rate);
+    static tuple<xarray<float>, xarray<float>, xarray<float>, xarray<float>> load_mnist_dataset(const float &train_test_split);
 };
 
 #endif

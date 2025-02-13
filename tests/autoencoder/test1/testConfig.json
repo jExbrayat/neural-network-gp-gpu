@@ -1,0 +1,11 @@
+{
+    "dataset_path": "datasets/autoencoding/noisy_sinus.csv",
+    "train_test_split": 1,
+    "network_architecture": [4, 20],
+    "epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.1,
+    "model_save_path": null,
+    "pretrained_model_path": null,
+    "pred_save_path": null
+}

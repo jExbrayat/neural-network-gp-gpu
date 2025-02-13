@@ -1,18 +1,44 @@
 #include <cuda.h>
 
-__global__ void matrixMulKernel(const float* A, const float* B, float* C, const int A_rows, const int A_cols, const int B_cols) {
-    // Compute the global thread index for both x and y dimensions
-    int idx = blockIdx.x * blockDim.x + threadIdx.x; // Column index in C
-    int idy = blockIdx.y * blockDim.y + threadIdx.y; // Row index in C
+#define TILE_SIZE 16  // Does it must match the block dimension ? 
 
-    // Check if the thread is within bounds
-    if (idx < B_cols && idy < A_rows) {
-        float value = 0.0f;
-        // Perform the dot product for the row of A and column of B
-        for (int k = 0; k < A_cols; ++k) {
-            value += A[idy * A_cols + k] * B[k * B_cols + idx];
+__global__ void matrixMulKernel(const float* A, const float* B, float* C, 
+                                const int A_rows, const int A_cols, const int B_cols) {
+    __shared__ float Asub[TILE_SIZE][TILE_SIZE];
+    __shared__ float Bsub[TILE_SIZE][TILE_SIZE];
+
+    int tx = threadIdx.x, ty = threadIdx.y;
+    int row = blockIdx.y * TILE_SIZE + ty;
+    int col = blockIdx.x * TILE_SIZE + tx;
+    
+    float value = 0.0f;
+
+    for (int t = 0; t < (A_cols + TILE_SIZE - 1) / TILE_SIZE; ++t) {
+        // Load A and B tiles into shared memory
+        if (row < A_rows && (t * TILE_SIZE + tx) < A_cols) {
+            Asub[ty][tx] = A[row * A_cols + (t * TILE_SIZE + tx)];
+        } else {
+            Asub[ty][tx] = 0.0f;
         }
-        C[idy * B_cols + idx] = value;  // Store the result in C
+
+        if ((t * TILE_SIZE + ty) < A_cols && col < B_cols) {
+            Bsub[ty][tx] = B[(t * TILE_SIZE + ty) * B_cols + col];
+        } else {
+            Bsub[ty][tx] = 0.0f;
+        }
+
+        __syncthreads();  // Ensure all threads have loaded data to avoid bank conflicts
+
+        // Compute partial sum
+        for (int k = 0; k < TILE_SIZE; ++k) {
+            value += Asub[ty][k] * Bsub[k][tx];
+        }
+
+        __syncthreads();  // Ensure all threads have completed computation
+    }
+
+    if (row < A_rows && col < B_cols) {
+        C[row * B_cols + col] = value;
     }
 }
 

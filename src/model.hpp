@@ -9,8 +9,9 @@
 #include <string>
 #include <fstream>
 #include <optional>
-#include "gradient_descent.cuh"
+#include "gradient_descent.hpp"
 
+using namespace std;
 using namespace xt;
 
 // Define class structure
@@ -25,14 +26,14 @@ public:
     void load_loss(const string &path);
     void save_weights(const string &path) const;
     void save_loss(const string &path) const;
-    xarray<float> predict(const xarray<float> &x_test) const;
+    xarray<double> predict(const xarray<double> &x_test) const;
 
 protected:
     vector<int> architecture; // Define the neural network architecture
     int input_size; // Define the input size of the data to fit predict
-    vector<xarray<float>> weights; // Define vector of tensors for making operations on weights
-    vector<xarray<float>> biases; // Define vector of tensors for making operations on biases
-    vector<float> loss_history; // Store the loss over epochs
+    vector<xarray<double>> weights; // Define vector of tensors for making operations on weights
+    vector<xarray<double>> biases; // Define vector of tensors for making operations on biases
+    vector<double> loss_history; // Store the loss over epochs
 
     void initialize_weights(); // Initialize weights. Used if no weights loaded
 };

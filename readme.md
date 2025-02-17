@@ -5,14 +5,19 @@ This project provides a framework for training a feedforward neural network with
 
 ## Overview
 
-The program uses a json configuration file to specify the model's parameters and saving path.
+The program uses a json configuration file to specify the model's parameters and saving paths.
 
 ## Usage
-
-Run the program with the following command:
-
+- Go in the project's root directory.  
+- Compile.
 ```bash
-build/main path/to/config.json
+make build/main_program
+```
+- Create your configuration file `config.json` in the project's root directory.
+
+- Run.
+```bash
+make run
 ```
 
 ### Configuration File Format
@@ -29,50 +34,20 @@ The configuration file should be in JSON format with the following parameters:
 - **`"model_save_path"`** *string | null*: Folder path to save the trained model weights and loss data. *Note:* Ensure the directory exists before running the program, as it does not currently create missing directories.
 - **`"pred_save_path"`** *string*: File path to save predictions for the test set.
 
-## User Guide
+### Example
 
-GnuPlot is required for plotting purposes, such as MNIST autoencoder input/output images comparisons and model loss tracking.  
-If GnuPlot is not installed, the program will still run but without the ability to generate plots.
+Train in seconds an autoencoder for denoising sinusoidal signals with the following configuration:
 
-## Developer Guide
-
-### Compiling the Project
-
-#### With project-included libraries
-
-The program is thought to be compiled without Docker in case of admin rights restrictions.
-
-1) `cd` in the project's root directory.  
-2) Build the program by including the header only libraries:
-```bash
-g++ -std=c++17 -I "libraries/include" -I "." src/main.cpp -o build/main
+```json
+{
+    "dataset_path": "datasets/noisy_sinus.csv",
+    "train_test_split": 0.8,
+    "network_architecture": [8, 4, 8, 20],
+    "epochs": 100,
+    "batch_size": 64,
+    "learning_rate": 0.1,
+    "model_save_path": null,
+    "pretrained_model_path":null,
+    "pred_save_path": null 
+}
 ```
-
-#### With Docker
-The compilation process is streamlined using Docker. Ensure you have Docker Engine installed.  
-If not, follow this [installation guide](https://docs.docker.com/engine/install/ubuntu/).
-
-1) `cd` in the project's root directory.  
-2) Build the container with the Dockerfile:
-```bash
-sudo docker build -t cuda_nn_project .
-```
-After this step, an image  named *cuda_nn_project* of an Ubuntu version with all necessary packages and g++ compiler is installed. 
-
-3) Run the Docker image:
-```bash
-sudo docker run -it --rm -v $(pwd):/usr/src/app cuda_nn_project
-```
-This command opens a terminal within the container, where you can execute and test the program.  
-The `-v` argument tells the container to read the files in the host's project root directory (pwd) when being in `container:/usr/src/app` (see docker volumes).  
-The container files will be cleaned up directly after exiting it due to the `--rm` argument.
-
-4) Compile the project in the running container:  
-```bash
-g++ -I "." -I "/root/.local/share/mamba/include/" src/main.cpp -o build/main
-```
-
-## Data structure
-### MNIST dataset
-mnist_train: vector<60_000>(vector<784>(uint8 0-255))  
-mnist_test: vector<60_000>(int 0-9)
